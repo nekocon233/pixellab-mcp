@@ -106,9 +106,9 @@ def register(mcp) -> None:
             "oblique_projection": False,
         }
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
         if init_image_path:
-            payload["init_image"] = image_utils.path_to_png_b64(init_image_path)
+            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
             payload["init_image_strength"] = init_image_strength
 
         result = await ws_client.call("generate-flux-same-style", payload)
@@ -165,9 +165,9 @@ def register(mcp) -> None:
             "oblique_projection": False,
         }
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
         if init_image_path:
-            payload["init_image"] = image_utils.path_to_png_b64(init_image_path)
+            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
             payload["init_image_strength"] = init_image_strength
 
         result = await ws_client.call("generate-pixelart-flux", payload)
@@ -234,14 +234,14 @@ def register(mcp) -> None:
             "oblique_projection": False,
         }
         if reference_image_path:
-            payload["reference_image"] = image_utils.path_to_png_b64(reference_image_path)
+            payload["reference_image"] = {"base64": image_utils.path_to_png_b64(reference_image_path)}
         if style_image_path:
-            payload["style_image"] = image_utils.path_to_png_b64(style_image_path)
+            payload["style_image"] = {"base64": image_utils.path_to_png_b64(style_image_path)}
             payload["style_strength"] = style_strength
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
         if init_image_path:
-            payload["init_image"] = image_utils.path_to_png_b64(init_image_path)
+            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
             payload["init_image_strength"] = init_image_strength
 
         result = await ws_client.call("generate-style", payload)
@@ -296,7 +296,7 @@ def register(mcp) -> None:
             "seed": seed,
         }
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
         result = await ws_client.call("generate-spritesheet", payload)
         images = image_utils.extract_images(result)
@@ -342,9 +342,9 @@ def register(mcp) -> None:
             "seed": seed,
         }
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
         if init_image_path:
-            payload["init_image"] = image_utils.path_to_png_b64(init_image_path)
+            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
             payload["init_image_strength"] = init_image_strength
 
         result = await ws_client.call("generate-general", payload)
@@ -383,9 +383,9 @@ def register(mcp) -> None:
             "seed": seed,
         }
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
         if init_image_path:
-            payload["init_image"] = image_utils.path_to_png_b64(init_image_path)
+            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
             payload["init_image_strength"] = init_image_strength
 
         result = await ws_client.call("generate-general-xl", payload)

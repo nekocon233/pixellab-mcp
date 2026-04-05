@@ -180,7 +180,7 @@ def register(mcp) -> None:
         if template_name:
             payload["template_name"] = template_name
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
         result = await ws_client.call("generate-animation", payload)
         images = image_utils.extract_images(result)
@@ -258,7 +258,7 @@ def register(mcp) -> None:
             "seed": str(seed),
         }
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
         result = await ws_client.call("generate-interpolation", payload)
         images = image_utils.extract_images(result)

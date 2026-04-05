@@ -36,7 +36,7 @@ def register(mcp) -> None:
             "seed": str(seed),
         }
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
         result = await ws_client.call("generate-edit", payload)
         images = image_utils.extract_images(result)
@@ -127,7 +127,7 @@ def register(mcp) -> None:
         height: int = 64,
         text_guidance_scale: float = 8.0,
         no_background: bool = True,
-        n_images: int = 4,
+        n_images: int = 1,
         seed: int = 0,
         color_image_path: Optional[str] = None,
     ) -> str:
@@ -136,7 +136,7 @@ def register(mcp) -> None:
         Args:
             image_paths: List of sprite paths to edit.
             description: Edit instruction e.g. "change facial expression to smiling".
-            n_images: Number of variations to generate per input image.
+            n_images: Number of variations to generate per input image (default 1).
         """
         images_b64 = [image_utils.path_to_png_b64(p) for p in image_paths]
         payload = {
@@ -149,7 +149,7 @@ def register(mcp) -> None:
             "seed": str(seed),
         }
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
         result = await ws_client.call("generate-multi-edit", payload)
         images = image_utils.extract_images(result)
@@ -199,9 +199,9 @@ def register(mcp) -> None:
             "force_colors": False,
         }
         if reference_image_path:
-            payload["reference_image"] = image_utils.path_to_png_b64(reference_image_path)
+            payload["reference_image"] = {"base64": image_utils.path_to_png_b64(reference_image_path)}
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
         result = await ws_client.call("generate-inpainting", payload)
         images = image_utils.extract_images(result)
@@ -336,7 +336,7 @@ def register(mcp) -> None:
             "seed": str(seed),
         }
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
         result = await ws_client.call("generate-reshape", payload)
         images = image_utils.extract_images(result)
@@ -383,7 +383,7 @@ def register(mcp) -> None:
             "seed": str(seed),
         }
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
         result = await ws_client.call("generate-resize", payload)
         images = image_utils.extract_images(result)
@@ -422,7 +422,7 @@ def register(mcp) -> None:
             "seed": str(seed),
         }
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
         result = await ws_client.call("generate-try-on", payload)
         images = image_utils.extract_images(result)

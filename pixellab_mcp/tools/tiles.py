@@ -39,11 +39,11 @@ def register(mcp) -> None:
             "seed": str(seed),
         }
         if reference_image_path:
-            payload["reference_image"] = image_utils.path_to_png_b64(reference_image_path)
+            payload["reference_image"] = {"base64": image_utils.path_to_png_b64(reference_image_path)}
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
         if init_image_path:
-            payload["init_image"] = image_utils.path_to_png_b64(init_image_path)
+            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
 
         result = await ws_client.call("generate-tiles", payload)
         images = image_utils.extract_images(result)
@@ -143,11 +143,11 @@ def register(mcp) -> None:
             "seed": str(seed),
         }
         if style_image_path:
-            payload["style_image"] = image_utils.path_to_png_b64(style_image_path)
+            payload["style_image"] = {"base64": image_utils.path_to_png_b64(style_image_path)}
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
         if init_image_path:
-            payload["init_image"] = image_utils.path_to_png_b64(init_image_path)
+            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
 
         result = await ws_client.call("generate-tiles-style", payload)
         images = image_utils.extract_images(result)
@@ -206,13 +206,13 @@ def register(mcp) -> None:
             "seed": str(seed),
         }
         if inner_reference_path:
-            payload["inner_reference_image"] = image_utils.path_to_png_b64(inner_reference_path)
+            payload["inner_reference_image"] = {"base64": image_utils.path_to_png_b64(inner_reference_path)}
         if outer_reference_path:
-            payload["outer_reference_image"] = image_utils.path_to_png_b64(outer_reference_path)
+            payload["outer_reference_image"] = {"base64": image_utils.path_to_png_b64(outer_reference_path)}
         if transition_reference_path:
-            payload["transition_reference_image"] = image_utils.path_to_png_b64(transition_reference_path)
+            payload["transition_reference_image"] = {"base64": image_utils.path_to_png_b64(transition_reference_path)}
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
         result = await ws_client.call("generate-tileset", payload)
         images = image_utils.extract_images(result)
@@ -263,11 +263,11 @@ def register(mcp) -> None:
             "seed": str(seed),
         }
         if inner_reference_path:
-            payload["inner_reference_image"] = image_utils.path_to_png_b64(inner_reference_path)
+            payload["inner_reference_image"] = {"base64": image_utils.path_to_png_b64(inner_reference_path)}
         if transition_reference_path:
-            payload["transition_reference_image"] = image_utils.path_to_png_b64(transition_reference_path)
+            payload["transition_reference_image"] = {"base64": image_utils.path_to_png_b64(transition_reference_path)}
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
         result = await ws_client.call("generate-tileset-sidescroller", payload)
         images = image_utils.extract_images(result)
@@ -312,9 +312,9 @@ def register(mcp) -> None:
             "seed": str(seed),
         }
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
         if init_image_path:
-            payload["init_image"] = image_utils.path_to_png_b64(init_image_path)
+            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
 
         result = await ws_client.call("generate-texture", payload)
         images = image_utils.extract_images(result)

@@ -65,17 +65,17 @@ def register(mcp) -> None:
             "legs_scale": 1,
         }
         if south_reference_path:
-            payload["south_reference_image"] = image_utils.path_to_png_b64(south_reference_path)
+            payload["south_reference_image"] = {"base64": image_utils.path_to_png_b64(south_reference_path)}
         if north_reference_path:
-            payload["north_reference_image"] = image_utils.path_to_png_b64(north_reference_path)
+            payload["north_reference_image"] = {"base64": image_utils.path_to_png_b64(north_reference_path)}
         if east_reference_path:
-            payload["east_reference_image"] = image_utils.path_to_png_b64(east_reference_path)
+            payload["east_reference_image"] = {"base64": image_utils.path_to_png_b64(east_reference_path)}
         if south_east_reference_path:
-            payload["south_east_reference_image"] = image_utils.path_to_png_b64(south_east_reference_path)
+            payload["south_east_reference_image"] = {"base64": image_utils.path_to_png_b64(south_east_reference_path)}
         if north_east_reference_path:
-            payload["north_east_reference_image"] = image_utils.path_to_png_b64(north_east_reference_path)
+            payload["north_east_reference_image"] = {"base64": image_utils.path_to_png_b64(north_east_reference_path)}
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
         result = await ws_client.call("generate-one-shot", payload)
         images = image_utils.extract_images(result)
@@ -121,9 +121,9 @@ def register(mcp) -> None:
             "seed": str(seed),
         }
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
         if init_image_path:
-            payload["init_image"] = image_utils.path_to_png_b64(init_image_path)
+            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
 
         result = await ws_client.call("generate-re-pose-animation", payload)
         images = image_utils.extract_images(result)
@@ -173,9 +173,9 @@ def register(mcp) -> None:
             "seed": str(seed),
         }
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
         if init_image_path:
-            payload["init_image"] = image_utils.path_to_png_b64(init_image_path)
+            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
 
         result = await ws_client.call("generate-general-pose", payload)
         images = image_utils.extract_images(result)
@@ -231,9 +231,9 @@ def register(mcp) -> None:
             "seed": str(seed),
         }
         if reference_image_path:
-            payload["selected_reference_image"] = image_utils.path_to_png_b64(reference_image_path)
+            payload["selected_reference_image"] = {"base64": image_utils.path_to_png_b64(reference_image_path)}
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
         result = await ws_client.call("generate-pose-animation", payload)
         images = image_utils.extract_images(result)
