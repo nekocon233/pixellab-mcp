@@ -13,6 +13,7 @@ def register(mcp) -> None:
     async def edit_generate(
         image_path: str,
         description: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         text_guidance_scale: float = 8.0,
@@ -39,7 +40,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-edit", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "edit")
+        paths = image_utils.save_response_images(images, width, height, "edit", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
     # ── 2. Edit image Pro ─────────────────────────────────────────────────────
@@ -48,6 +49,7 @@ def register(mcp) -> None:
     async def edit_image_pro(
         reference_image_path: str,
         description: str,
+        output_dir: str,
         edit_image_path: Optional[str] = None,
         width: int = 256,
         height: int = 256,
@@ -79,7 +81,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("edit-image-pro", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "edit_image_pro")
+        paths = image_utils.save_response_images(images, width, height, "edit_image_pro", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
     # ── 3. Edit animation Pro ─────────────────────────────────────────────────
@@ -88,6 +90,7 @@ def register(mcp) -> None:
     async def edit_animation_pro(
         frame_image_paths: List[str],
         description: str,
+        output_dir: str,
         no_background: bool = True,
         output_format: str = "frames",
         seed: int = 0,
@@ -110,7 +113,7 @@ def register(mcp) -> None:
         }
         result = await ws_client.call("edit-animation-pro", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, 64, 64, "edit_anim_pro")
+        paths = image_utils.save_response_images(images, 64, 64, "edit_anim_pro", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
 
     # ── 4. Multi-edit ─────────────────────────────────────────────────────────
@@ -119,6 +122,7 @@ def register(mcp) -> None:
     async def multi_edit_generate(
         image_paths: List[str],
         description: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         text_guidance_scale: float = 8.0,
@@ -149,7 +153,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-multi-edit", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "multi_edit")
+        paths = image_utils.save_response_images(images, width, height, "multi_edit", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
     # ── 5. Inpainting ─────────────────────────────────────────────────────────
@@ -158,6 +162,7 @@ def register(mcp) -> None:
     async def inpainting_generate(
         inpainting_image_path: str,
         description: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         view: str = "none",
@@ -200,7 +205,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-inpainting", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "inpainting")
+        paths = image_utils.save_response_images(images, width, height, "inpainting", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
     # ── 6. Inpainting v3 ──────────────────────────────────────────────────────
@@ -209,6 +214,7 @@ def register(mcp) -> None:
     async def inpainting_v3_generate(
         inpainting_image_path: str,
         description: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         no_background: bool = False,
@@ -233,7 +239,7 @@ def register(mcp) -> None:
         }
         result = await ws_client.call("generate-inpainting-v3", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "inpainting_v3")
+        paths = image_utils.save_response_images(images, width, height, "inpainting_v3", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
     # ── 7. Correct pixel art ──────────────────────────────────────────────────
@@ -241,6 +247,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def correct_pixelart(
         image_paths: List[str],
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         strength: int = 10,
@@ -259,7 +266,7 @@ def register(mcp) -> None:
         }
         result = await ws_client.call("correct-pixelart", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "correct_pixelart")
+        paths = image_utils.save_response_images(images, width, height, "correct_pixelart", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
     # ── 8. Remove background ──────────────────────────────────────────────────
@@ -267,6 +274,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def remove_background(
         image_path: str,
+        output_dir: str,
         text: str = "",
         background_removal_task: str = "Simple",
         width: int = 64,
@@ -289,7 +297,7 @@ def register(mcp) -> None:
         }
         result = await ws_client.call("remove-background", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "remove_bg")
+        paths = image_utils.save_response_images(images, width, height, "remove_bg", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
     # ── 9. Reshape ────────────────────────────────────────────────────────────
@@ -298,6 +306,7 @@ def register(mcp) -> None:
     async def reshape_generate(
         reference_image_path: str,
         shape_image_path: str,
+        output_dir: str,
         description: str = "",
         view: str = "low top-down",
         image_guidance_scale: float = 2.0,
@@ -331,7 +340,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-reshape", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, 64, 64, "reshape")
+        paths = image_utils.save_response_images(images, 64, 64, "reshape", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
     # ── 10. Resize ────────────────────────────────────────────────────────────
@@ -339,6 +348,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def resize_generate(
         reference_image_path: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         description: str = "",
@@ -377,7 +387,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-resize", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "resize")
+        paths = image_utils.save_response_images(images, width, height, "resize", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
     # ── 11. Try on ────────────────────────────────────────────────────────────
@@ -386,6 +396,7 @@ def register(mcp) -> None:
     async def try_on_generate(
         subject_image_path: str,
         try_on_image_path: str,
+        output_dir: str,
         description: str = "",
         width: int = 64,
         height: int = 64,
@@ -415,7 +426,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-try-on", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "try_on")
+        paths = image_utils.save_response_images(images, width, height, "try_on", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
     # ── 12. Transfer outfit Pro ───────────────────────────────────────────────
@@ -424,6 +435,7 @@ def register(mcp) -> None:
     async def transfer_outfit_pro(
         reference_image_path: str,
         frame_image_paths: List[str],
+        output_dir: str,
         no_background: bool = True,
         output_format: str = "frames",
         seed: int = 0,
@@ -444,5 +456,5 @@ def register(mcp) -> None:
         }
         result = await ws_client.call("transfer-outfit-pro", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, 64, 64, "transfer_outfit")
+        paths = image_utils.save_response_images(images, 64, 64, "transfer_outfit", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)

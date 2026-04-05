@@ -13,6 +13,7 @@ def register(mcp) -> None:
     async def canny_generate(
         canny_image_path: str,
         description: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         view: str = "side",
@@ -57,5 +58,5 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-general-canny", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "canny")
+        paths = image_utils.save_response_images(images, width, height, "canny", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)

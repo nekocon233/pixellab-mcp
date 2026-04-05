@@ -12,6 +12,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def complete_character_generate(
         description: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         view: str = "high top-down",
@@ -78,7 +79,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-one-shot", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "complete_char")
+        paths = image_utils.save_response_images(images, width, height, "complete_char", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
 
     # ── 2. Re-pose animation ──────────────────────────────────────────────────
@@ -86,6 +87,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def re_pose_animation(
         reference_image_path: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         view: str = "low top-down",
@@ -125,7 +127,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-re-pose-animation", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "re_pose")
+        paths = image_utils.save_response_images(images, width, height, "re_pose", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
 
     # ── 3. Pose-based generation ──────────────────────────────────────────────
@@ -133,6 +135,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def pose_generate(
         pose_image_path: str,
+        output_dir: str,
         description: str = "",
         width: int = 128,
         height: int = 128,
@@ -176,7 +179,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-general-pose", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "pose")
+        paths = image_utils.save_response_images(images, width, height, "pose", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
     # ── 4. Pose animation ─────────────────────────────────────────────────────
@@ -184,6 +187,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def pose_animation_generate(
         pose_image_paths: List[str],
+        output_dir: str,
         reference_image_path: Optional[str] = None,
         width: int = 64,
         height: int = 64,
@@ -233,5 +237,5 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-pose-animation", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "pose_animation")
+        paths = image_utils.save_response_images(images, width, height, "pose_animation", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)

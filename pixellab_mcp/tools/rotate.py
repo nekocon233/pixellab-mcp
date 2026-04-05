@@ -12,6 +12,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def rotate_single(
         from_image_path: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         view_change: int = 0,
@@ -49,7 +50,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-rotate-single", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "rotate_single")
+        paths = image_utils.save_response_images(images, width, height, "rotate_single", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
     # ── 2. Multi-direction rotations ─────────────────────────────────────────
@@ -57,6 +58,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def rotations_generate(
         rotation_image_paths: List[str],
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         view: str = "low top-down",
@@ -93,7 +95,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-rotations", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "rotations")
+        paths = image_utils.save_response_images(images, width, height, "rotations", output_dir)
         return f"Saved {len(paths)} rotation(s):\n" + "\n".join(paths)
 
     # ── 3. Generate 4 rotations from text ────────────────────────────────────
@@ -101,6 +103,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def four_rotations_generate(
         description: str,
+        output_dir: str,
         width: int = 32,
         height: int = 32,
         view: str = "side",
@@ -140,7 +143,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-4-rotations", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "4_rotations")
+        paths = image_utils.save_response_images(images, width, height, "4_rotations", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
 
     # ── 4. Generate 8 rotations from text ────────────────────────────────────
@@ -148,6 +151,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def eight_rotations_generate(
         description: str,
+        output_dir: str,
         width: int = 32,
         height: int = 32,
         view: str = "side",
@@ -187,7 +191,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-8-rotations", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "8_rotations")
+        paths = image_utils.save_response_images(images, width, height, "8_rotations", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
 
     # ── 5. Reference → 8 rotations ───────────────────────────────────────────
@@ -197,6 +201,7 @@ def register(mcp) -> None:
         description: str,
         concept_image_path: str,
         reference_image_path: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         view: str = "low top-down",
@@ -225,5 +230,5 @@ def register(mcp) -> None:
         }
         result = await ws_client.call("generate-reference-to-8-rotations", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "ref_to_8rot")
+        paths = image_utils.save_response_images(images, width, height, "ref_to_8rot", output_dir)
         return f"Saved {len(paths)} rotation(s):\n" + "\n".join(paths)

@@ -12,6 +12,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def tiles_generate(
         description: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         view: str = "high top-down",
@@ -46,7 +47,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-tiles", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "tiles")
+        paths = image_utils.save_response_images(images, width, height, "tiles", output_dir)
         return f"Saved {len(paths)} tile(s):\n" + "\n".join(paths)
 
     # ── 2. Tiles Pro ──────────────────────────────────────────────────────────
@@ -54,6 +55,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def tiles_pro_generate(
         description: str,
+        output_dir: str,
         tile_type: str = "isometric",
         tile_size: str = "32",
         tile_view_angle: int = 20,
@@ -95,7 +97,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-tiles-pro", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, 64, 64, "tiles_pro")
+        paths = image_utils.save_response_images(images, 64, 64, "tiles_pro", output_dir)
         return f"Saved {len(paths)} tile(s):\n" + "\n".join(paths)
 
     # ── 3. Tiles style ────────────────────────────────────────────────────────
@@ -103,6 +105,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def tiles_style_generate(
         description: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         view: str = "high top-down",
@@ -148,7 +151,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-tiles-style", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "tiles_style")
+        paths = image_utils.save_response_images(images, width, height, "tiles_style", output_dir)
         return f"Saved {len(paths)} tile(s):\n" + "\n".join(paths)
 
     # ── 4. Tileset (transition set) ───────────────────────────────────────────
@@ -158,6 +161,7 @@ def register(mcp) -> None:
         inner_description: str,
         outer_description: str,
         transition_description: str,
+        output_dir: str,
         tile_width: int = 16,
         tile_height: int = 16,
         text_guidance_scale: float = 8.0,
@@ -213,7 +217,7 @@ def register(mcp) -> None:
         result = await ws_client.call("generate-tileset", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(
-            images, tile_width * 8, tile_height, "tileset"
+            images, tile_width * 8, tile_height, "tileset", output_dir
         )
         return f"Saved {len(paths)} tileset(s):\n" + "\n".join(paths)
 
@@ -223,6 +227,7 @@ def register(mcp) -> None:
     async def tileset_sidescroller_generate(
         inner_description: str,
         transition_description: str,
+        output_dir: str,
         tile_width: int = 16,
         tile_height: int = 16,
         text_guidance_scale: float = 8.0,
@@ -267,7 +272,7 @@ def register(mcp) -> None:
         result = await ws_client.call("generate-tileset-sidescroller", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(
-            images, tile_width * 8, tile_height, "tileset_side"
+            images, tile_width * 8, tile_height, "tileset_side", output_dir
         )
         return f"Saved {len(paths)} tileset(s):\n" + "\n".join(paths)
 
@@ -276,6 +281,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def texture_generate(
         description: str,
+        output_dir: str,
         width: int = 16,
         height: int = 16,
         text_guidance_scale: float = 8.0,
@@ -312,5 +318,5 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-texture", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "texture")
+        paths = image_utils.save_response_images(images, width, height, "texture", output_dir)
         return f"Saved {len(paths)} texture(s):\n" + "\n".join(paths)

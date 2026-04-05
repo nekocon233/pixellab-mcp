@@ -13,6 +13,7 @@ def register(mcp) -> None:
     async def consistent_style_generate(
         description: str,
         style_image_path: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         style_description: str = "",
@@ -53,7 +54,7 @@ def register(mcp) -> None:
         }
         result = await ws_client.call("generate-consistent-style", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "consistent_style")
+        paths = image_utils.save_response_images(images, width, height, "consistent_style", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
 
     # ── 2. Flux same-style ────────────────────────────────────────────────────
@@ -62,6 +63,7 @@ def register(mcp) -> None:
     async def pixflux_same_style_generate(
         description: str,
         style_image_path: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         text_guidance_scale: float = 8.0,
@@ -111,7 +113,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-flux-same-style", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "flux_same_style")
+        paths = image_utils.save_response_images(images, width, height, "flux_same_style", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
     # ── 3. Pixelart Flux ──────────────────────────────────────────────────────
@@ -119,6 +121,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def pixelart_flux_generate(
         description: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         view: str = "side",
@@ -169,7 +172,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-pixelart-flux", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "pixelart_flux")
+        paths = image_utils.save_response_images(images, width, height, "pixelart_flux", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
     # ── 4. Style-controlled generation ───────────────────────────────────────
@@ -177,6 +180,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def style_generate(
         description: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         view: str = "side",
@@ -242,7 +246,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-style", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "style")
+        paths = image_utils.save_response_images(images, width, height, "style", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
     # ── 5. Spritesheet (instant character) ───────────────────────────────────
@@ -250,6 +254,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def spritesheet_generate(
         description: str,
+        output_dir: str,
         width: int = 32,
         height: int = 32,
         view: str = "side",
@@ -296,7 +301,7 @@ def register(mcp) -> None:
         result = await ws_client.call("generate-spritesheet", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(
-            images, width * n_columns, height * n_rows, "spritesheet"
+            images, width * n_columns, height * n_rows, "spritesheet", output_dir
         )
         return f"Saved {len(paths)} spritesheet(s):\n" + "\n".join(paths)
 
@@ -305,6 +310,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def general_generate(
         description: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         view: str = "high top-down",
@@ -343,7 +349,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-general", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "general")
+        paths = image_utils.save_response_images(images, width, height, "general", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
     # ── 7. General XL ─────────────────────────────────────────────────────────
@@ -351,6 +357,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def general_xl_generate(
         description: str,
+        output_dir: str,
         width: int = 128,
         height: int = 128,
         view: str = "none",
@@ -383,7 +390,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-general-xl", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "general_xl")
+        paths = image_utils.save_response_images(images, width, height, "general_xl", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
     # ── 8. Image → pixel art ──────────────────────────────────────────────────
@@ -391,6 +398,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def image_to_pixelart(
         image_path: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         text_guidance_scale: float = 8.0,
@@ -409,5 +417,5 @@ def register(mcp) -> None:
         }
         result = await ws_client.call("generate-image-to-pixelart", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "to_pixelart")
+        paths = image_utils.save_response_images(images, width, height, "to_pixelart", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)

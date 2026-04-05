@@ -14,6 +14,7 @@ def register(mcp) -> None:
         description: str,
         action: str,
         reference_image_path: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         n_frames: int = 4,
@@ -38,7 +39,9 @@ def register(mcp) -> None:
         payload = {
             "character": description,
             "action": action,
-            "movement_images": [image_utils.path_to_png_b64(reference_image_path)],
+            "movement_images": [{"base64": image_utils.path_to_png_b64(reference_image_path)}],
+            "inpainting_images": ["none", "none", "none", "none"],
+            "selected_reference_image": {"base64": image_utils.path_to_png_b64(reference_image_path)},
             "image_size": {"width": width, "height": height},
             "n_frames": n_frames,
             "view": view,
@@ -50,11 +53,11 @@ def register(mcp) -> None:
             "seed": str(seed),
         }
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["selected_reference_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
         result = await ws_client.call("generate-movement", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "movement")
+        paths = image_utils.save_response_images(images, width, height, "movement", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
 
     # ── 2. Animate with text (v1) ─────────────────────────────────────────────
@@ -63,6 +66,9 @@ def register(mcp) -> None:
     async def animate_with_text(
         reference_image_path: str,
         action: str,
+        output_dir: str,
+        width: int = 64,
+        height: int = 64,
         view: str = "none",
         direction: str = "none",
         no_background: bool = True,
@@ -76,9 +82,12 @@ def register(mcp) -> None:
             view: side / low top-down / high top-down / none
             direction: north / east / south / west / none
         """
+        b64_png = image_utils.path_to_png_b64(reference_image_path)
         payload = {
-            "display_reference_image": image_utils.path_to_png_b64(reference_image_path),
+            "reference_image": {"base64": b64_png},
+            "reference_image_size": {"width": width, "height": height},
             "action": action,
+            "image_size": {"width": width, "height": height},
             "view": view,
             "direction": direction,
             "no_background": no_background,
@@ -86,7 +95,7 @@ def register(mcp) -> None:
         }
         result = await ws_client.call("generate-animate-with-text", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, 64, 64, "animate_text")
+        paths = image_utils.save_response_images(images, 64, 64, "animate_text", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
 
     # ── 3. Animate with text v3 ───────────────────────────────────────────────
@@ -95,6 +104,9 @@ def register(mcp) -> None:
     async def animate_with_text_v3(
         reference_image_path: str,
         action: str,
+        output_dir: str,
+        width: int = 64,
+        height: int = 64,
         frame_count: int = 8,
         no_background: bool = True,
         seed: int = 0,
@@ -106,16 +118,18 @@ def register(mcp) -> None:
             action: Text description of animation e.g. "Walking cycle".
             frame_count: Number of frames; must be even, range 4–16.
         """
+        b64_rgba, w, h = image_utils.path_to_rgba_b64(reference_image_path)
         payload = {
-            "display_reference_image": image_utils.path_to_png_b64(reference_image_path),
+            "first_frame": {"type": "rgba_bytes", "base64": b64_rgba, "width": w, "height": h},
             "action": action,
+            "image_size": {"width": width, "height": height},
             "frame_count": frame_count,
             "no_background": no_background,
             "seed": str(seed),
         }
         result = await ws_client.call("animate-with-text-v3", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, 64, 64, "animate_text_v3")
+        paths = image_utils.save_response_images(images, 64, 64, "animate_text_v3", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
 
     # ── 4. Skeleton-based animation ───────────────────────────────────────────
@@ -123,6 +137,7 @@ def register(mcp) -> None:
     @mcp.tool()
     async def animation_generate(
         action: str,
+        output_dir: str,
         width: int = 64,
         height: int = 64,
         description: str = "",
@@ -169,7 +184,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-animation", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "animation")
+        paths = image_utils.save_response_images(images, width, height, "animation", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
 
     # ── 5. Animate character/object ───────────────────────────────────────────
@@ -178,6 +193,7 @@ def register(mcp) -> None:
     async def animate_character_object(
         reference_image_path: str,
         action: str,
+        output_dir: str,
         description: str = "",
         no_background: bool = True,
         seed: int = 0,
@@ -200,7 +216,7 @@ def register(mcp) -> None:
         }
         result = await ws_client.call("generate-animate-character-object", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, 64, 64, "char_object_anim")
+        paths = image_utils.save_response_images(images, 64, 64, "char_object_anim", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
 
     # ── 6. Interpolation ──────────────────────────────────────────────────────
@@ -209,6 +225,7 @@ def register(mcp) -> None:
     async def interpolation_generate(
         from_image_path: str,
         to_image_path: str,
+        output_dir: str,
         action: str = "transforming",
         width: int = 64,
         height: int = 64,
@@ -245,7 +262,7 @@ def register(mcp) -> None:
 
         result = await ws_client.call("generate-interpolation", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "interpolation")
+        paths = image_utils.save_response_images(images, width, height, "interpolation", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
 
     # ── 7. Interpolation v3 ───────────────────────────────────────────────────
@@ -254,6 +271,7 @@ def register(mcp) -> None:
     async def interpolation_v3_generate(
         start_image_path: str,
         end_image_path: str,
+        output_dir: str,
         action: str = "transforming",
         frame_count: int = 8,
         no_background: bool = True,
@@ -277,7 +295,7 @@ def register(mcp) -> None:
         }
         result = await ws_client.call("generate-interpolation-v3", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, 64, 64, "interpolation_v3")
+        paths = image_utils.save_response_images(images, 64, 64, "interpolation_v3", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
 
     # ── 8. Interpolation Pro ──────────────────────────────────────────────────
@@ -286,6 +304,7 @@ def register(mcp) -> None:
     async def interpolation_pro_generate(
         start_image_path: str,
         end_image_path: str,
+        output_dir: str,
         action: str = "transforming",
         no_background: bool = True,
         seed: int = 0,
@@ -306,5 +325,5 @@ def register(mcp) -> None:
         }
         result = await ws_client.call("generate-interpolation-pro", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, 64, 64, "interpolation_pro")
+        paths = image_utils.save_response_images(images, 64, 64, "interpolation_pro", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
