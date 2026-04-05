@@ -3,44 +3,30 @@
 MCP server that wraps the **PixelLab private WebSocket API** — all 44+ pixel-art generation endpoints exposed as MCP tools.  
 Equivalent in capability to the official Aseprite plugin, including the high-quality "Create images from style references" (Pro) feature.
 
+## Quick start
+
+No clone needed — run directly from GitHub with [uv](https://docs.astral.sh/uv/):
+
+```bash
+uvx --from git+https://github.com/nekocon233/pixellab-mcp pixellab-mcp
+```
+
+Or install once and call the console script:
+
+```bash
+pip install git+https://github.com/nekocon233/pixellab-mcp
+pixellab-mcp
+```
+
 ## Requirements
 
 - Python 3.11+
 - A [Pixel Lab](https://pixellab.ai) account with API access
 - `uv` (recommended) or `pip`
 
-## Installation
-
-```bash
-# Editable install (recommended for development)
-pip install -e .
-
-# Or with uv
-uv pip install -e .
-```
-
-Set your API secret in `.env` (copy `.env.example` first):
-
-```
-PIXELLAB_SECRET=your-token-here
-```
-
-## Running the server
-
-```bash
-# After installing
-pixellab-mcp
-
-# Without installing
-python -m pixellab_mcp
-
-# One-shot with uv (no install needed)
-uvx --from . pixellab-mcp
-```
-
-The server speaks **stdio MCP** (compatible with Claude Desktop, VS Code, Cursor, etc.).
-
 ## MCP client configuration
+
+Set `PIXELLAB_SECRET` in the `env` block — no `.env` file needed.
 
 ### Claude Desktop (`claude_desktop_config.json`)
 
@@ -48,7 +34,11 @@ The server speaks **stdio MCP** (compatible with Claude Desktop, VS Code, Cursor
 {
   "mcpServers": {
     "pixellab": {
-      "command": "pixellab-mcp"
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/nekocon233/pixellab-mcp", "pixellab-mcp"],
+      "env": {
+        "PIXELLAB_SECRET": "your-token-here"
+      }
     }
   }
 }
@@ -62,24 +52,29 @@ The server speaks **stdio MCP** (compatible with Claude Desktop, VS Code, Cursor
     "servers": {
       "pixellab": {
         "type": "stdio",
-        "command": "pixellab-mcp"
+        "command": "uvx",
+        "args": ["--from", "git+https://github.com/nekocon233/pixellab-mcp", "pixellab-mcp"],
+        "env": {
+          "PIXELLAB_SECRET": "your-token-here"
+        }
       }
     }
   }
 }
 ```
 
-### With uv (portable, no separate install)
+### Cursor / Windsurf / other MCP clients
 
-```json
-{
-  "mcpServers": {
-    "pixellab": {
-      "command": "uvx",
-      "args": ["--from", "/path/to/pixellab-mcp", "pixellab-mcp"]
-    }
-  }
-}
+Same pattern — `command: uvx`, `args: ["--from", "git+https://...", "pixellab-mcp"]`, `env.PIXELLAB_SECRET`.
+
+## Local development
+
+```bash
+git clone https://github.com/nekocon233/pixellab-mcp
+cd pixellab-mcp
+pip install -e .
+cp .env.example .env   # then fill in PIXELLAB_SECRET
+pixellab-mcp
 ```
 
 ## Tool catalogue
