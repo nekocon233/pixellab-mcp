@@ -233,11 +233,9 @@ def register(mcp) -> None:
             "isometric": False,
             "oblique_projection": False,
         }
+        payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)} if init_image_path else image_utils.blank_image_field()
         payload["init_image_strength"] = init_image_strength
-        if init_image_path:
-            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
-        if color_image_path:
-            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
+        payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)} if color_image_path else image_utils.blank_image_field()
         if reference_image_path:
             payload["reference_image"] = {"base64": image_utils.path_to_png_b64(reference_image_path)}
         if style_image_path:

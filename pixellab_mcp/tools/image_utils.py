@@ -10,6 +10,19 @@ from PIL import Image
 _PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 
 
+def blank_image_field() -> dict:
+    """Return a minimal 1x1 transparent PNG wrapped as an API image dict.
+
+    Used as a required-but-unused placeholder for endpoints that always
+    require image fields even when no image is provided.
+    """
+    img = Image.new("RGBA", (1, 1), (0, 0, 0, 0))
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    b64 = base64.b64encode(buf.getvalue()).decode()
+    return {"base64": b64}
+
+
 def path_to_png_b64(path: str) -> str:
     """Read an image file and return base64-encoded PNG bytes (string)."""
     img = Image.open(path).convert("RGBA")
