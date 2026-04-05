@@ -284,25 +284,41 @@ def register(mcp) -> None:
         output_dir: str,
         text: str = "",
         background_removal_task: str = "Simple",
-        width: int = 64,
-        height: int = 64,
         seed: int = 0,
     ) -> str:
         """Remove the background from a pixel art sprite.
 
         Args:
             image_path: Sprite to process.
-            text: Optional description hint for complex backgrounds.
-            background_removal_task: "Simple" for solid/transparent backgrounds.
+            text: Description hint, only used when background_removal_task="Complex".
+            background_removal_task: "Simple" or "Complex".
         """
+        import io as _io
+        import base64 as _b64
+        from PIL import Image as _Image
+
+        img = _Image.open(image_path).convert("RGBA")
+        width, height = img.size
+        rgba_b64 = _b64.b64encode(img.tobytes()).decode()
+
+        # Map display names to API values
+        task_map = {"Simple": "remove_simple_background", "Complex": "remove_complex_background"}
+        api_task = task_map.get(background_removal_task, background_removal_task)
+
         payload = {
-            "image": image_utils.path_to_png_b64(image_path),
-            "text": text,
-            "background_removal_task": background_removal_task,
+            "image": {"base64": rgba_b64},
+            "background_removal_task": api_task,
             "image_size": {"width": width, "height": height},
+            "width": width,
+            "height": height,
             "seed": str(seed),
+            "output_method": "New frame",
+            "model_name": "generate_remove_background",
         }
-        payload["model_name"] = "generate_remove_background"
+        # text is only sent for complex removal
+        if api_task == "remove_complex_background":
+            payload["text"] = text
+
         result = await ws_client.call("remove-background", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "remove_bg", output_dir)
