@@ -48,6 +48,7 @@ def register(mcp) -> None:
         if init_image_path:
             payload["init_image"] = image_utils.path_to_png_b64(init_image_path)
 
+        payload["model_name"] = "generate_rotate_single"
         result = await ws_client.call("generate-rotate-single", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "rotate_single", output_dir)
@@ -93,6 +94,7 @@ def register(mcp) -> None:
         if color_image_path:
             payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
 
+        payload["model_name"] = "generate_rotations"
         result = await ws_client.call("generate-rotations", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "rotations", output_dir)
@@ -141,6 +143,7 @@ def register(mcp) -> None:
         if color_image_path:
             payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
 
+        payload["model_name"] = "generate_4_rotations"
         result = await ws_client.call("generate-4-rotations", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "4_rotations", output_dir)
@@ -189,6 +192,7 @@ def register(mcp) -> None:
         if color_image_path:
             payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
 
+        payload["model_name"] = "generate_8_rotations"
         result = await ws_client.call("generate-8-rotations", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "8_rotations", output_dir)
@@ -228,6 +232,7 @@ def register(mcp) -> None:
             "no_background": no_background,
             "seed": str(seed),
         }
+        payload["model_name"] = "reference_to_8_rotations"
         result = await ws_client.call("generate-reference-to-8-rotations", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "ref_to_8rot", output_dir)

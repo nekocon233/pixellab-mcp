@@ -45,6 +45,7 @@ def register(mcp) -> None:
         if init_image_path:
             payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
 
+        payload["model_name"] = "generate_tiles"
         result = await ws_client.call("generate-tiles", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "tiles", output_dir)
@@ -82,7 +83,7 @@ def register(mcp) -> None:
             "tile_view_angle": tile_view_angle,
             "thickness": thickness,
             "method": method,
-            "seed": seed,
+            "seed": str(seed),
             "style_options": {
                 "color_palette": True,
                 "outline": True,
@@ -95,6 +96,7 @@ def register(mcp) -> None:
                 image_utils.path_to_png_b64(p) for p in style_image_paths
             ]
 
+        payload["model_name"] = "generate_tiles_pro"
         result = await ws_client.call("generate-tiles-pro", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, 64, 64, "tiles_pro", output_dir)
@@ -149,6 +151,7 @@ def register(mcp) -> None:
         if init_image_path:
             payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
 
+        payload["model_name"] = "generate_tiles_style"
         result = await ws_client.call("generate-tiles-style", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "tiles_style", output_dir)
@@ -214,6 +217,7 @@ def register(mcp) -> None:
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
+        payload["model_name"] = "generate_tileset"
         result = await ws_client.call("generate-tileset", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(
@@ -269,6 +273,7 @@ def register(mcp) -> None:
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
+        payload["model_name"] = "generate_tileset_sidescroller"
         result = await ws_client.call("generate-tileset-sidescroller", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(
@@ -316,6 +321,7 @@ def register(mcp) -> None:
         if init_image_path:
             payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
 
+        payload["model_name"] = "generate_texture"
         result = await ws_client.call("generate-texture", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "texture", output_dir)

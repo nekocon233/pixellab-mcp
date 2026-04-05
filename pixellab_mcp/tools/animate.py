@@ -55,6 +55,7 @@ def register(mcp) -> None:
         if color_image_path:
             payload["selected_reference_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
+        payload["model_name"] = "generate_movement"
         result = await ws_client.call("generate-movement", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "movement", output_dir)
@@ -93,6 +94,7 @@ def register(mcp) -> None:
             "no_background": no_background,
             "seed": str(seed),
         }
+        payload["model_name"] = "generate_animate_with_text"
         result = await ws_client.call("generate-animate-with-text", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, 64, 64, "animate_text", output_dir)
@@ -127,6 +129,7 @@ def register(mcp) -> None:
             "no_background": no_background,
             "seed": str(seed),
         }
+        payload["model_name"] = "generate_animate_with_text_v3"
         result = await ws_client.call("animate-with-text-v3", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, 64, 64, "animate_text_v3", output_dir)
@@ -182,6 +185,7 @@ def register(mcp) -> None:
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
+        payload["model_name"] = "generate_animation"
         result = await ws_client.call("generate-animation", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "animation", output_dir)
@@ -214,6 +218,7 @@ def register(mcp) -> None:
             "no_background": no_background,
             "seed": str(seed),
         }
+        payload["model_name"] = "generate_animate_character_object"
         result = await ws_client.call("generate-animate-character-object", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, 64, 64, "char_object_anim", output_dir)
@@ -260,6 +265,7 @@ def register(mcp) -> None:
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
+        payload["model_name"] = "generate_interpolation"
         result = await ws_client.call("generate-interpolation", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "interpolation", output_dir)
@@ -293,6 +299,7 @@ def register(mcp) -> None:
             "no_background": no_background,
             "seed": str(seed),
         }
+        payload["model_name"] = "generate_interpolation_v3"
         result = await ws_client.call("generate-interpolation-v3", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, 64, 64, "interpolation_v3", output_dir)
@@ -323,6 +330,7 @@ def register(mcp) -> None:
             "no_background": no_background,
             "seed": str(seed),
         }
+        payload["model_name"] = "interpolation"
         result = await ws_client.call("generate-interpolation-pro", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, 64, 64, "interpolation_pro", output_dir)

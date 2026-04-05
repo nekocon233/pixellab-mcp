@@ -38,6 +38,7 @@ def register(mcp) -> None:
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
+        payload["model_name"] = "generate_edit"
         result = await ws_client.call("generate-edit", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "edit", output_dir)
@@ -79,6 +80,7 @@ def register(mcp) -> None:
         if edit_image_path:
             payload["display_edit_image"] = image_utils.path_to_png_b64(edit_image_path)
 
+        payload["model_name"] = "edit_image_pro"
         result = await ws_client.call("edit-image-pro", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "edit_image_pro", output_dir)
@@ -111,6 +113,7 @@ def register(mcp) -> None:
             "output_format": output_format,
             "seed": str(seed),
         }
+        payload["model_name"] = "edit_animation_pro"
         result = await ws_client.call("edit-animation-pro", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, 64, 64, "edit_anim_pro", output_dir)
@@ -151,6 +154,7 @@ def register(mcp) -> None:
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
+        payload["model_name"] = "generate_multi_edit"
         result = await ws_client.call("generate-multi-edit", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "multi_edit", output_dir)
@@ -203,6 +207,7 @@ def register(mcp) -> None:
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
+        payload["model_name"] = "generate_inpainting"
         result = await ws_client.call("generate-inpainting", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "inpainting", output_dir)
@@ -237,6 +242,7 @@ def register(mcp) -> None:
             "output_format": "frames",
             "seed": str(seed),
         }
+        payload["model_name"] = "generate_inpainting_v3"
         result = await ws_client.call("generate-inpainting-v3", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "inpainting_v3", output_dir)
@@ -264,6 +270,7 @@ def register(mcp) -> None:
             "image_size": {"width": width, "height": height},
             "strength": strength,
         }
+        payload["model_name"] = "generate_correct_pixelart"
         result = await ws_client.call("correct-pixelart", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "correct_pixelart", output_dir)
@@ -295,6 +302,7 @@ def register(mcp) -> None:
             "image_size": {"width": width, "height": height},
             "seed": str(seed),
         }
+        payload["model_name"] = "generate_remove_background"
         result = await ws_client.call("remove-background", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "remove_bg", output_dir)
@@ -338,6 +346,7 @@ def register(mcp) -> None:
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
+        payload["model_name"] = "generate_reshape"
         result = await ws_client.call("generate-reshape", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, 64, 64, "reshape", output_dir)
@@ -385,6 +394,7 @@ def register(mcp) -> None:
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
+        payload["model_name"] = "generate_resize"
         result = await ws_client.call("generate-resize", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "resize", output_dir)
@@ -424,6 +434,7 @@ def register(mcp) -> None:
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
+        payload["model_name"] = "generate_try_on"
         result = await ws_client.call("generate-try-on", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "try_on", output_dir)
@@ -454,6 +465,7 @@ def register(mcp) -> None:
             "output_format": output_format,
             "seed": str(seed),
         }
+        payload["model_name"] = "transfer_outfit_pro"
         result = await ws_client.call("transfer-outfit-pro", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, 64, 64, "transfer_outfit", output_dir)

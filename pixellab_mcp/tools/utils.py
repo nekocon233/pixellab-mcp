@@ -56,6 +56,7 @@ def register(mcp) -> None:
         if init_image_path:
             payload["init_image"] = image_utils.path_to_png_b64(init_image_path)
 
+        payload["model_name"] = "generate_canny"
         result = await ws_client.call("generate-general-canny", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "canny", output_dir)

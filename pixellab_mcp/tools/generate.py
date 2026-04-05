@@ -50,8 +50,9 @@ def register(mcp) -> None:
             "image_size": {"width": width, "height": height},
             "no_background": no_background,
             "output_format": output_format,
-            "seed": seed,
+            "seed": str(seed),
         }
+        payload["model_name"] = "generate_consistent_style"
         result = await ws_client.call("generate-consistent-style", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "consistent_style", output_dir)
@@ -90,9 +91,10 @@ def register(mcp) -> None:
             shading: e.g. "basic shading" / ""
             detail: e.g. "medium detail" / "low detail" / ""
         """
+        blank = {"base64": ""}
         payload = {
             "description": description,
-            "style_image": image_utils.path_to_png_b64(style_image_path),
+            "style_image": {"base64": image_utils.path_to_png_b64(style_image_path)},
             "image_size": {"width": width, "height": height},
             "text_guidance_scale": text_guidance_scale,
             "no_background": no_background,
@@ -101,9 +103,14 @@ def register(mcp) -> None:
             "outline": outline,
             "shading": shading,
             "detail": detail,
-            "seed": seed,
+            "seed": str(seed),
             "isometric": False,
             "oblique_projection": False,
+            "init_image": blank,
+            "init_image_strength": init_image_strength,
+            "color_image": blank,
+            "output_method": "New frame",
+            "model_name": "generate_flux_same_style",
         }
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
@@ -149,6 +156,7 @@ def register(mcp) -> None:
             map_tile: true = tileable map tile output
             isometric: true = isometric projection
         """
+        blank = {"base64": ""}
         payload = {
             "description": description,
             "image_size": {"width": width, "height": height},
@@ -159,10 +167,16 @@ def register(mcp) -> None:
             "outline": outline,
             "shading": shading,
             "detail": detail,
-            "seed": seed,
+            "seed": str(seed),
             "map_tile": map_tile,
             "isometric": isometric,
             "oblique_projection": False,
+            "modifier": "none",
+            "init_image": blank,
+            "init_image_strength": init_image_strength,
+            "color_image": blank,
+            "output_method": "New frame",
+            "model_name": "generate_pixelart_flux",
         }
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
@@ -227,20 +241,27 @@ def register(mcp) -> None:
             "shading": shading,
             "detail": detail,
             "coverage_percentage": coverage_percentage,
-            "seed": seed,
+            "seed": str(seed),
             "map_tile": False,
             "force_colors": False,
             "isometric": False,
             "oblique_projection": False,
         }
-        payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)} if init_image_path else image_utils.blank_image_field()
+        blank = {"base64": ""}
+        payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)} if init_image_path else blank
         payload["init_image_strength"] = init_image_strength
-        payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)} if color_image_path else image_utils.blank_image_field()
-        if reference_image_path:
-            payload["reference_image"] = {"base64": image_utils.path_to_png_b64(reference_image_path)}
+        payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)} if color_image_path else blank
+        payload["reference_image"] = {"base64": image_utils.path_to_png_b64(reference_image_path)} if reference_image_path else blank
+        payload["style_image"] = blank
+        payload["style_strength"] = style_strength
         if style_image_path:
             payload["style_image"] = {"base64": image_utils.path_to_png_b64(style_image_path)}
-            payload["style_strength"] = style_strength
+        payload["style_guidance_scale"] = 3
+        payload["style_image_size"] = {"width": width, "height": height}
+        payload["use_inpainting"] = False
+        payload["inpainting_image"] = blank
+        payload["output_method"] = "New frame"
+        payload["model_name"] = "generate_style"
 
         result = await ws_client.call("generate-style", payload)
         images = image_utils.extract_images(result)
@@ -291,7 +312,8 @@ def register(mcp) -> None:
             "ai_freedom": ai_freedom,
             "n_rows": n_rows,
             "n_columns": n_columns,
-            "seed": seed,
+            "seed": str(seed),
+            "model_name": "generate_spritesheet",
         }
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
@@ -326,6 +348,7 @@ def register(mcp) -> None:
             view: side / low top-down / high top-down
             direction: north / east / south / west / none
         """
+        blank = {"base64": ""}
         payload = {
             "description": description,
             "image_size": {"width": width, "height": height},
@@ -337,7 +360,12 @@ def register(mcp) -> None:
             "view_direction_guidance_scale": 8,
             "pixelart_style_guidance_scale": 4,
             "no_background_guidance_scale": 4,
-            "seed": seed,
+            "seed": str(seed),
+            "init_image": blank,
+            "init_image_strength": init_image_strength,
+            "color_image": blank,
+            "output_method": "New frame",
+            "model_name": "generate_general",
         }
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
@@ -369,6 +397,7 @@ def register(mcp) -> None:
         init_image_strength: int = 300,
     ) -> str:
         """Generate large-scale pixel art using the XL model. Better for complex scenes."""
+        blank = {"base64": ""}
         payload = {
             "description": description,
             "negative_description": negative_description,
@@ -378,7 +407,12 @@ def register(mcp) -> None:
             "direction": direction,
             "no_background": no_background,
             "view_direction": False,
-            "seed": seed,
+            "seed": str(seed),
+            "init_image": blank,
+            "init_image_strength": init_image_strength,
+            "color_image": blank,
+            "output_method": "New frame",
+            "model_name": "generate_general_xl",
         }
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
@@ -405,13 +439,14 @@ def register(mcp) -> None:
     ) -> str:
         """Convert any photo or artwork to pixel art style."""
         payload = {
-            "image": image_utils.path_to_png_b64(image_path),
+            "image": {"base64": image_utils.path_to_png_b64(image_path)},
             "image_size": {"width": width, "height": height},
             "width": width,
             "height": height,
             "text_guidance_scale": text_guidance_scale,
             "no_background": no_background,
-            "seed": seed,
+            "seed": str(seed),
+            "model_name": "generate_image_to_pixelart",
         }
         result = await ws_client.call("generate-image-to-pixelart", payload)
         images = image_utils.extract_images(result)

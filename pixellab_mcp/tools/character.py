@@ -77,6 +77,7 @@ def register(mcp) -> None:
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
+        payload["model_name"] = "generate_one_shot"
         result = await ws_client.call("generate-one-shot", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "complete_char", output_dir)
@@ -125,6 +126,7 @@ def register(mcp) -> None:
         if init_image_path:
             payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
 
+        payload["model_name"] = "generate_re_pose_animation"
         result = await ws_client.call("generate-re-pose-animation", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "re_pose", output_dir)
@@ -177,6 +179,7 @@ def register(mcp) -> None:
         if init_image_path:
             payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
 
+        payload["model_name"] = "generate_pose"
         result = await ws_client.call("generate-general-pose", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "pose", output_dir)
@@ -235,6 +238,7 @@ def register(mcp) -> None:
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
+        payload["model_name"] = "generate_pose_animation"
         result = await ws_client.call("generate-pose-animation", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "pose_animation", output_dir)
