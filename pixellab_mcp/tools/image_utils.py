@@ -1,19 +1,34 @@
 """Image encoding/decoding helpers for PixelLab MCP server."""
 import base64
 import io
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import List, Tuple
 
 from PIL import Image
 
-OUTPUT_DIR = Path(__file__).parent / "assets" / "output"
 _PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 
 
+def _output_dir() -> Path:
+    """Resolve the output directory at call time.
+
+    Priority:
+    1. ``PIXELLAB_OUTPUT_DIR`` environment variable (absolute or relative to cwd)
+    2. ``<cwd>/assets/output`` — safe default when running via uvx or any
+       install location, since cwd is wherever the user invoked the client.
+    """
+    env = os.environ.get("PIXELLAB_OUTPUT_DIR")
+    if env:
+        return Path(env)
+    return Path.cwd() / "assets" / "output"
+
+
 def ensure_output_dir() -> Path:
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    return OUTPUT_DIR
+    d = _output_dir()
+    d.mkdir(parents=True, exist_ok=True)
+    return d
 
 
 def path_to_png_b64(path: str) -> str:
@@ -65,7 +80,7 @@ def save_response_images(
             continue
 
         raw = base64.b64decode(b64)
-        out_path = OUTPUT_DIR / f"{prefix}_{ts}_{i}.png"
+        out_path = ensure_output_dir() / f"{prefix}_{ts}_{i}.png"
 
         if raw[:8] == _PNG_MAGIC:
             out_path.write_bytes(raw)

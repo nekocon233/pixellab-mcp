@@ -27,6 +27,7 @@ pixellab-mcp
 ## MCP client configuration
 
 Set `PIXELLAB_SECRET` in the `env` block — no `.env` file needed.
+Optionally set `PIXELLAB_OUTPUT_DIR` to control where generated images are saved (defaults to `<cwd>/assets/output`).
 
 ### Claude Desktop (`claude_desktop_config.json`)
 
