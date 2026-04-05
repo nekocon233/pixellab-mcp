@@ -436,19 +436,66 @@ def register(mcp) -> None:
         text_guidance_scale: float = 8.0,
         no_background: bool = False,
         seed: int = 0,
+        max_input_size: int = 1024,
     ) -> str:
-        """Convert any photo or artwork to pixel art style."""
+        """Convert any photo or artwork to pixel art style.
+
+        The input image is automatically cropped to match the output aspect ratio,
+        rescaled to max_input_size, and sent as raw RGBA bytes (matching the
+        Aseprite plugin protocol for this endpoint).
+
+        Args:
+            width/height: Output pixel art dimensions; must be ≤ input area.
+            max_input_size: Max input resolution (tier-1 cap is 1024, tier-2+ is 1280).
+        """
+        import io as _io
+        from PIL import Image as _Image
+
+        img = _Image.open(image_path).convert("RGBA")
+        ow, oh = img.size
+
+        # 1. Crop to output aspect ratio (centred)
+        target_h = int(ow * height / width)
+        if target_h > oh:
+            target_w = int(oh * width / height)
+            left = (ow - target_w) // 2
+            img = img.crop((left, 0, left + target_w, oh))
+        else:
+            top = (oh - target_h) // 2
+            img = img.crop((0, top, ow, top + target_h))
+
+        # 2. Downscale to max_input_size (maintain ratio, divisible by 4)
+        cw, ch = img.size
+        if max(cw, ch) > max_input_size:
+            scale = max_input_size / max(cw, ch)
+            cw, ch = int(cw * scale), int(ch * scale)
+        cw = max(4, (cw // 4) * 4)
+        ch = max(4, (ch // 4) * 4)
+        img = img.resize((cw, ch), _Image.LANCZOS)
+
+        # 3. Send as raw RGBA bytes; image_size = INPUT dimensions
+        import base64 as _b64
+        rgba_b64 = _b64.b64encode(img.tobytes()).decode()
         payload = {
-            "image": {"base64": image_utils.path_to_png_b64(image_path)},
-            "image_size": {"width": width, "height": height},
+            "image": {"base64": rgba_b64},
+            "image_size": {"width": cw, "height": ch},
             "width": width,
             "height": height,
             "text_guidance_scale": text_guidance_scale,
             "no_background": no_background,
             "seed": str(seed),
+            "output_method": "New frame",
             "model_name": "generate_image_to_pixelart",
         }
         result = await ws_client.call("generate-image-to-pixelart", payload)
-        images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "to_pixelart", output_dir)
+
+        # 4. API returns quantized_image (RGBA bytes with explicit width/height)
+        qi = result.get("quantized_image") or result.get("image")
+        if qi is None:
+            return "Saved 0 image(s)"
+        images = [qi]
+        # Resolve actual output dims from response if available
+        out_w = qi.get("width", width) if isinstance(qi, dict) else width
+        out_h = qi.get("height", height) if isinstance(qi, dict) else height
+        paths = image_utils.save_response_images(images, out_w, out_h, "to_pixelart", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
