@@ -2,11 +2,10 @@
 
 All tool modules call ``ws_client.call(endpoint, payload)`` to communicate
 with ``ws://api.pixellab.ai/<endpoint>``.  Auth fields (secret/tier/version)
-are injected automatically from .env and the Aseprite plugin package.json.
+are injected automatically from environment variables or .env file.
 """
 import json
 import os
-from pathlib import Path
 
 import websockets
 from dotenv import load_dotenv
@@ -17,18 +16,8 @@ WS_BASE = "ws://api.pixellab.ai/"
 
 # ── Auth ────────────────────────────────────────────────────────────────────
 SECRET: str = os.getenv("PIXELLAB_SECRET", "")
-
-_PKG_PATH = Path(
-    r"C:\Users\nekocon\AppData\Roaming\Aseprite\extensions\pixellab\package.json"
-)
-if _PKG_PATH.exists():
-    with open(_PKG_PATH, encoding="utf-8") as _f:
-        _pkg = json.load(_f)
-    TIER: int = int(_pkg.get("tier", 1))
-    VERSION: str = str(_pkg.get("version", "0.4.98"))
-else:
-    TIER = 1
-    VERSION = "0.4.98"
+TIER: int = int(os.getenv("PIXELLAB_TIER", "1"))
+VERSION: str = os.getenv("PIXELLAB_VERSION", "0.5.0")
 
 # ── Core call ────────────────────────────────────────────────────────────────
 

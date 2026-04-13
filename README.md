@@ -26,7 +26,7 @@ pixellab-mcp
 
 ## MCP client configuration
 
-Set `PIXELLAB_SECRET` in the `env` block — no `.env` file needed.
+Set `PIXELLAB_SECRET` in the `env` block — no `.env` file needed. `PIXELLAB_TIER` and `PIXELLAB_VERSION` are optional (see [Environment variables](#environment-variables)).
 
 ### Claude Desktop (`claude_desktop_config.json`)
 
@@ -164,6 +164,14 @@ pixellab-mcp
 All generated images are saved to `assets/output/` with timestamped filenames.  
 Tools return the saved path(s) as text.
 
+## Environment variables
+
+| Variable           | Required | Default | Description        |
+| ------------------ | -------- | ------- | ------------------ |
+| `PIXELLAB_SECRET`  | ✅        | —       | API secret key     |
+| `PIXELLAB_TIER`    | ❌        | `1`     | Account tier       |
+| `PIXELLAB_VERSION` | ❌        | `0.5.0` | API version string |
+
 ## Project structure
 
 ```
@@ -190,7 +198,7 @@ pixellab-mcp/
 ## Technical notes
 
 - **Transport**: Private WebSocket API `ws://api.pixellab.ai/<endpoint>` (same backend as Aseprite plugin)
-- **Auth**: `secret` / `tier` / `version` injected automatically from `.env` and the installed Aseprite plugin's `package.json`
+- **Auth**: `secret` / `tier` / `version` injected automatically from environment variables (via `.env` or MCP client `env` block)
 - **Image encoding**: `generate-consistent-style` uses raw RGBA bytes (not PNG) — handled transparently by `image_utils`
 - **No public REST API**: This server bypasses the limited `/v1/` REST API and calls the full private endpoint set
 

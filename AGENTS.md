@@ -46,8 +46,7 @@ Each tool module exposes a single `register(mcp: FastMCP)` function; `server.py`
 ```python
 {"secret": SECRET, "tier": TIER, "version": VERSION, **your_payload}
 ```
-`SECRET` from `.env`; `TIER` and `VERSION` from the Aseprite plugin `package.json` at  
-`C:\Users\<user>\AppData\Roaming\Aseprite\extensions\pixellab\package.json`.
+All three values are read from environment variables (`.env` or MCP client `env` block). See the Environment table below.
 
 ### Seed field
 
@@ -68,9 +67,11 @@ python -m pixellab_mcp   # alternative without console script
 
 ## Environment
 
-| Variable          | Required | Description                    |
-| ----------------- | -------- | ------------------------------ |
-| `PIXELLAB_SECRET` | ✅        | API secret key — set in `.env` |
+| Variable            | Required | Default   | Description              |
+| ------------------- | -------- | --------- | ------------------------ |
+| `PIXELLAB_SECRET`   | ✅        | —         | API secret key           |
+| `PIXELLAB_TIER`     | ❌        | `1`       | Account tier             |
+| `PIXELLAB_VERSION`  | ❌        | `0.5.0`   | API version string       |
 
 ## Do not
 
