@@ -18,6 +18,7 @@ def register(mcp) -> None:
         view: str = "high top-down",
         text_guidance_scale: float = 8.0,
         init_image_strength: int = 300,
+        negative_description: str = "mixels. amateur",
         seed: int = 0,
         reference_image_path: Optional[str] = None,
         color_image_path: Optional[str] = None,
@@ -32,16 +33,23 @@ def register(mcp) -> None:
         """
         payload = {
             "description": description,
+            "negative_description": negative_description,
             "image_size": {"width": width, "height": height},
             "view": view,
             "text_guidance_scale": text_guidance_scale,
             "init_image_strength": init_image_strength,
+            "force_colors": False,
+            "isometric": False,
+            "oblique_projection": False,
             "seed": str(seed),
         }
         if reference_image_path:
             payload["reference_image"] = {"base64": image_utils.path_to_png_b64(reference_image_path)}
-        if color_image_path:
-            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
+        payload["color_image"] = (
+            {"base64": image_utils.path_to_png_b64(color_image_path)}
+            if color_image_path
+            else image_utils.blank_image_field()
+        )
         if init_image_path:
             payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
 
@@ -214,8 +222,11 @@ def register(mcp) -> None:
             payload["outer_reference_image"] = {"base64": image_utils.path_to_png_b64(outer_reference_path)}
         if transition_reference_path:
             payload["transition_reference_image"] = {"base64": image_utils.path_to_png_b64(transition_reference_path)}
-        if color_image_path:
-            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
+        payload["color_image"] = (
+            {"base64": image_utils.path_to_png_b64(color_image_path)}
+            if color_image_path
+            else image_utils.blank_image_field()
+        )
 
         payload["model_name"] = "generate_tileset"
         result = await ws_client.call("generate-tileset", payload)
@@ -270,8 +281,11 @@ def register(mcp) -> None:
             payload["inner_reference_image"] = {"base64": image_utils.path_to_png_b64(inner_reference_path)}
         if transition_reference_path:
             payload["transition_reference_image"] = {"base64": image_utils.path_to_png_b64(transition_reference_path)}
-        if color_image_path:
-            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
+        payload["color_image"] = (
+            {"base64": image_utils.path_to_png_b64(color_image_path)}
+            if color_image_path
+            else image_utils.blank_image_field()
+        )
 
         payload["model_name"] = "generate_tileset_sidescroller"
         result = await ws_client.call("generate-tileset-sidescroller", payload)

@@ -48,10 +48,17 @@ import pixellab as _pl  # noqa: E402
 
 @mcp.tool()
 def get_balance() -> str:
-    """Return the current Pixel Lab account credit balance in USD."""
+    """Return the prepaid Pixel Lab credit balance in USD.
+
+    DO NOT call this proactively before or after generation tools. Subscription
+    users always show 0 USD here (subscription quota is tracked separately and
+    is NOT reported by this endpoint), so a 0 result does NOT mean generation
+    will fail. Only call this tool when the user explicitly asks about their
+    prepaid credit balance.
+    """
     client = _pl.Client(secret=os.getenv("PIXELLAB_SECRET", ""))
     balance = client.get_balance()
-    return f"Balance: {balance.usd} USD"
+    return f"Prepaid credit balance: {balance.usd} USD (subscription quota not included)"
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
