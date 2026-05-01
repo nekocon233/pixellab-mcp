@@ -142,7 +142,6 @@ def register(mcp) -> None:
         tile_view: str = "top-down",
         tile_view_angle: float = 20,
         tile_depth_ratio: float = 0.0,
-        n_tiles: int = 1,
         seed: int = 0,
         style_image_paths: Optional[List[str]] = None,
     ) -> str:
@@ -155,7 +154,6 @@ def register(mcp) -> None:
             tile_view: top-down / high top-down / low top-down / side.
             tile_view_angle: Viewing angle in degrees (0-90).
             tile_depth_ratio: Depth ratio (0-1).
-            n_tiles: Number of tiles to generate (1-16).
             style_image_paths: Optional list of style reference images.
         """
         payload = {
@@ -166,7 +164,6 @@ def register(mcp) -> None:
             "tile_view": tile_view,
             "tile_view_angle": tile_view_angle,
             "tile_depth_ratio": tile_depth_ratio,
-            "n_tiles": n_tiles,
             "seed": seed,
             "style_options": {
                 "color_palette": True,
