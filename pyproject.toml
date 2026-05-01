@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "pixellab-mcp"
 version = "0.2.0"
-description = "MCP server wrapping the PixelLab V2 REST API – 48 tools for pixel art generation"
+description = "MCP server wrapping the PixelLab V2 REST API – 61 tools for pixel art generation"
 requires-python = ">=3.11"
 dependencies = [
     "mcp[cli]>=1.9.0",

@@ -20,6 +20,7 @@ def register(mcp) -> None:
         text_guidance_scale: float = 8.0,
         transition_size: float = 0.5,
         tileset_adherence: int = 100,
+        tileset_adherence_freedom: float = 500.0,
         tile_strength: float = 1.0,
         outline: str = "",
         shading: str = "basic shading",
@@ -30,17 +31,24 @@ def register(mcp) -> None:
         upper_reference_path: Optional[str] = None,
         transition_reference_path: Optional[str] = None,
         color_image_path: Optional[str] = None,
+        lower_base_tile_id: Optional[str] = None,
+        upper_base_tile_id: Optional[str] = None,
     ) -> str:
         """Generate a complete tileset with lower, upper, and transition tiles (8-tile Wang set).
 
+        Uses the modern POST /tilesets async endpoint. Retrieve result via get_tileset().
+
         Args:
-            lower_description: Center/fill tile description e.g. "ocean" (was inner_description).
-            upper_description: Border/edge tile description e.g. "sand" (was outer_description).
+            lower_description: Center/fill tile description e.g. "ocean".
+            upper_description: Border/edge tile description e.g. "sand".
             transition_description: Transition tile description e.g. "rocks".
             tile_width/tile_height: Size of each tile (16 or 32 only).
             transition_size: 0 / 0.25 / 0.5 / 1.0.
             tileset_adherence: 0-500, how strictly to follow the tileset rules.
+            tileset_adherence_freedom: 0-900, how flexible when following tileset structure.
             tile_strength: 0.1-2.0, pattern strength.
+            lower_base_tile_id: Optional metadata ID for the lower base tile (for connected tilesets).
+            upper_base_tile_id: Optional metadata ID for the upper base tile (for connected tilesets).
         """
         payload = {
             "lower_description": lower_description,
@@ -50,7 +58,7 @@ def register(mcp) -> None:
             "text_guidance_scale": text_guidance_scale,
             "transition_size": transition_size,
             "tileset_adherence": tileset_adherence,
-            "tileset_adherence_freedom": 500,
+            "tileset_adherence_freedom": tileset_adherence_freedom,
             "tile_strength": tile_strength,
             "outline": outline,
             "shading": shading,
@@ -66,8 +74,12 @@ def register(mcp) -> None:
             payload["transition_reference_image"] = {"base64": image_utils.path_to_png_b64(transition_reference_path)}
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
+        if lower_base_tile_id:
+            payload["lower_base_tile_id"] = lower_base_tile_id
+        if upper_base_tile_id:
+            payload["upper_base_tile_id"] = upper_base_tile_id
 
-        result = await http_client.call_async("create-tileset", payload)
+        result = await http_client.call_async("tilesets", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(
             images, tile_width * 8, tile_height, "tileset", output_dir
@@ -86,6 +98,7 @@ def register(mcp) -> None:
         text_guidance_scale: float = 8.0,
         transition_size: float = 0.5,
         tileset_adherence: int = 100,
+        tileset_adherence_freedom: float = 500.0,
         tile_strength: float = 1.0,
         outline: str = "",
         shading: str = "basic shading",
@@ -94,13 +107,19 @@ def register(mcp) -> None:
         lower_reference_path: Optional[str] = None,
         transition_reference_path: Optional[str] = None,
         color_image_path: Optional[str] = None,
+        lower_base_tile_id: Optional[str] = None,
     ) -> str:
         """Generate a side-scroller tileset with platform and transition tiles.
 
+        Uses the modern POST /tilesets-sidescroller async endpoint. Retrieve result via get_tileset().
+
         Args:
-            lower_description: Main platform tile e.g. "rocks" (was inner_description).
+            lower_description: Main platform tile e.g. "rocks".
             transition_description: Edge/transition tile e.g. "grass top".
             tile_width/tile_height: Individual tile dimensions (16 or 32).
+            tileset_adherence: 0-500, how strictly to follow the tileset rules.
+            tileset_adherence_freedom: 0-900, how flexible when following tileset structure.
+            lower_base_tile_id: Optional metadata ID for the lower base tile (for connected tilesets).
         """
         payload = {
             "lower_description": lower_description,
@@ -109,7 +128,7 @@ def register(mcp) -> None:
             "text_guidance_scale": text_guidance_scale,
             "transition_size": transition_size,
             "tileset_adherence": tileset_adherence,
-            "tileset_adherence_freedom": 500,
+            "tileset_adherence_freedom": tileset_adherence_freedom,
             "tile_strength": tile_strength,
             "outline": outline,
             "shading": shading,
@@ -122,8 +141,10 @@ def register(mcp) -> None:
             payload["transition_reference_image"] = {"base64": image_utils.path_to_png_b64(transition_reference_path)}
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
+        if lower_base_tile_id:
+            payload["lower_base_tile_id"] = lower_base_tile_id
 
-        result = await http_client.call_async("create-tileset-sidescroller", payload)
+        result = await http_client.call_async("tilesets-sidescroller", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(
             images, tile_width * 8, tile_height, "tileset_side", output_dir
@@ -144,6 +165,10 @@ def register(mcp) -> None:
         tile_depth_ratio: float = 0.0,
         seed: int = 0,
         style_image_paths: Optional[List[str]] = None,
+        style_color_palette: bool = True,
+        style_outline: bool = True,
+        style_detail: bool = True,
+        style_shading: bool = True,
     ) -> str:
         """Generate professional-quality tiles including isometric, hex, octagon.
 
@@ -155,6 +180,10 @@ def register(mcp) -> None:
             tile_view_angle: Viewing angle in degrees (0-90).
             tile_depth_ratio: Depth ratio (0-1).
             style_image_paths: Optional list of style reference images.
+            style_color_palette: Include color palette in style matching.
+            style_outline: Include outline in style matching.
+            style_detail: Include detail in style matching.
+            style_shading: Include shading in style matching.
         """
         payload = {
             "description": description,
@@ -166,17 +195,20 @@ def register(mcp) -> None:
             "tile_depth_ratio": tile_depth_ratio,
             "seed": seed,
             "style_options": {
-                "color_palette": True,
-                "outline": True,
-                "detail": True,
-                "shading": True,
+                "color_palette": style_color_palette,
+                "outline": style_outline,
+                "detail": style_detail,
+                "shading": style_shading,
             },
         }
         if style_image_paths:
-            payload["style_images"] = [
-                {"base64": image_utils.path_to_png_b64(p), "width": 32, "height": 32}
-                for p in style_image_paths
-            ]
+            from PIL import Image as _Image
+            style_imgs = []
+            for p in style_image_paths:
+                img = _Image.open(p)
+                w, h = img.size
+                style_imgs.append({"image": {"base64": image_utils.path_to_png_b64(p)}, "size": {"width": w, "height": h}})
+            payload["style_images"] = style_imgs
 
         result = await http_client.call_async("create-tiles-pro", payload)
         images = image_utils.extract_images(result)

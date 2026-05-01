@@ -25,6 +25,10 @@ def register(mcp) -> None:
         text_guidance_scale: float = 8.0,
         seed: int = 0,
         color_image_path: Optional[str] = None,
+        init_image_path: Optional[str] = None,
+        init_image_strength: int = 300,
+        mask_image_path: Optional[str] = None,
+        inpainting_image_path: Optional[str] = None,
     ) -> str:
         """Animate a character with a movement action (walk, run, attack, etc.).
 
@@ -35,21 +39,31 @@ def register(mcp) -> None:
             n_frames: Number of animation frames (2-20).
             view: side / low top-down / high top-down
             direction: north / east / south / west
+            init_image_path: Optional initial image for guided animation.
+            mask_image_path: Inpainting mask (white = regenerate). Requires init_image_path and inpainting_image_path.
+            inpainting_image_path: Image to inpaint over. Requires mask_image_path.
         """
         payload = {
             "description": description,
             "action": action,
-            "reference_image": {"base64": image_utils.path_to_png_b64(reference_image_path)},
+            "reference_image": {"base64": image_utils.path_to_png_b64(reference_image_path), "type": "base64", "format": "png"},
             "image_size": {"width": 64, "height": 64},
             "n_frames": n_frames,
             "view": view,
             "direction": direction,
             "image_guidance_scale": image_guidance_scale,
             "text_guidance_scale": text_guidance_scale,
+            "init_image_strength": init_image_strength,
             "seed": seed,
         }
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
+        if init_image_path:
+            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
+        if mask_image_path:
+            payload["mask_image"] = {"base64": image_utils.path_to_png_b64(mask_image_path)}
+        if inpainting_image_path:
+            payload["inpainting_image"] = {"base64": image_utils.path_to_png_b64(inpainting_image_path)}
 
         result = await http_client.call("animate-with-text", payload)
         images = image_utils.extract_images(result)
@@ -68,6 +82,8 @@ def register(mcp) -> None:
         view: str = "none",
         direction: str = "none",
         no_background: bool = True,
+        text_guidance_scale: float = 8.0,
+        image_guidance_scale: float = 4.0,
         seed: int = 0,
     ) -> str:
         """Animate a pixel art character using a text action description (Pro quality).
@@ -77,18 +93,22 @@ def register(mcp) -> None:
             action: Text description of animation e.g. "Walking", "Jump attack".
             view: side / low top-down / high top-down / none
             direction: north / east / south / west / none
+            text_guidance_scale: How strongly to follow the text prompt.
+            image_guidance_scale: How strongly to follow the reference image.
         """
         ref_b64 = image_utils.path_to_png_b64(reference_image_path)
         ref_img = Image.open(reference_image_path)
         rw, rh = ref_img.size
         payload = {
-            "reference_image": {"base64": ref_b64},
+            "reference_image": {"base64": ref_b64, "type": "base64", "format": "png"},
             "reference_image_size": {"width": rw, "height": rh},
             "action": action,
             "image_size": {"width": width, "height": height},
             "view": view,
             "direction": direction,
             "no_background": no_background,
+            "text_guidance_scale": text_guidance_scale,
+            "image_guidance_scale": image_guidance_scale,
             "seed": seed,
         }
         result = await http_client.call_async("animate-with-text-v2", payload)
@@ -105,6 +125,7 @@ def register(mcp) -> None:
         output_dir: str,
         last_frame_path: Optional[str] = None,
         frame_count: int = 8,
+        no_background: bool = False,
         seed: int = 0,
     ) -> str:
         """Animate a pixel art character with text (v3 - higher quality, even frame count).
@@ -114,19 +135,28 @@ def register(mcp) -> None:
             action: Text description of animation e.g. "Walking cycle".
             last_frame_path: Optional last frame for guided animation.
             frame_count: Number of frames; must be even, range 4-16.
+            no_background: True = transparent background on generated frames.
         """
+        ref_b64 = image_utils.path_to_png_b64(reference_image_path)
+        ref_img = Image.open(reference_image_path)
+        rw, rh = ref_img.size
+
         payload = {
-            "first_frame": {"base64": image_utils.path_to_png_b64(reference_image_path)},
+            "first_frame": {"image": {"base64": ref_b64}, "size": {"width": rw, "height": rh}},
             "action": action,
             "frame_count": frame_count,
+            "no_background": no_background,
             "seed": seed,
         }
         if last_frame_path:
-            payload["last_frame"] = {"base64": image_utils.path_to_png_b64(last_frame_path)}
+            lf_b64 = image_utils.path_to_png_b64(last_frame_path)
+            lf_img = Image.open(last_frame_path)
+            lw, lh = lf_img.size
+            payload["last_frame"] = {"image": {"base64": lf_b64}, "size": {"width": lw, "height": lh}}
 
-        result = await http_client.call("animate-with-text-v3", payload)
+        result = await http_client.call_async("animate-with-text-v3", payload)
         images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, 64, 64, "animate_text_v3", output_dir)
+        paths = image_utils.save_response_images(images, rw, rh, "animate_text_v3", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
 
     # ── 4. Animation from text ────────────────────────────────────────────────
@@ -144,6 +174,10 @@ def register(mcp) -> None:
         image_guidance_scale: float = 4.0,
         seed: int = 0,
         color_image_path: Optional[str] = None,
+        init_image_path: Optional[str] = None,
+        init_image_strength: int = 300,
+        mask_image_path: Optional[str] = None,
+        inpainting_image_path: Optional[str] = None,
     ) -> str:
         """Generate an animation sequence from text and a reference character image.
 
@@ -155,21 +189,31 @@ def register(mcp) -> None:
             reference_image_path: Character sprite to animate.
             description: Optional character description.
             n_frames: Number of frames to generate (2-20).
+            init_image_path: Optional initial image for guided animation.
+            mask_image_path: Inpainting mask (white = regenerate). Requires init_image_path and inpainting_image_path.
+            inpainting_image_path: Image to inpaint over. Requires mask_image_path.
         """
         payload = {
             "description": description,
             "action": action,
-            "reference_image": {"base64": image_utils.path_to_png_b64(reference_image_path)},
+            "reference_image": {"base64": image_utils.path_to_png_b64(reference_image_path), "type": "base64", "format": "png"},
             "image_size": {"width": 64, "height": 64},
             "n_frames": n_frames,
             "view": view,
             "direction": direction,
             "text_guidance_scale": text_guidance_scale,
             "image_guidance_scale": image_guidance_scale,
+            "init_image_strength": init_image_strength,
             "seed": seed,
         }
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
+        if init_image_path:
+            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
+        if mask_image_path:
+            payload["mask_image"] = {"base64": image_utils.path_to_png_b64(mask_image_path)}
+        if inpainting_image_path:
+            payload["inpainting_image"] = {"base64": image_utils.path_to_png_b64(inpainting_image_path)}
 
         result = await http_client.call("animate-with-text", payload)
         images = image_utils.extract_images(result)

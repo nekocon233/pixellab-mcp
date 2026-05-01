@@ -31,7 +31,6 @@ def register(mcp) -> None:
         """
         payload = {
             "image": {"base64": image_utils.path_to_png_b64(image_path)},
-            "image_size": {"width": width, "height": height},
             "description": description,
             "width": width,
             "height": height,
@@ -77,8 +76,8 @@ def register(mcp) -> None:
         if method == "edit_with_reference":
             payload = {
                 "method": "edit_with_reference",
-                "edit_images": [{"image": {"base64": ref_b64}, "width": rw, "height": rh}],
-                "reference_image": {"image": {"base64": ref_b64}, "width": rw, "height": rh},
+                "edit_images": [{"image": {"base64": ref_b64}, "size": {"width": rw, "height": rh}}],
+                "reference_image": {"image": {"base64": ref_b64}, "size": {"width": rw, "height": rh}},
                 "image_size": {"width": width, "height": height},
                 "no_background": no_background,
                 "seed": seed,
@@ -86,7 +85,7 @@ def register(mcp) -> None:
         else:
             payload = {
                 "method": "edit_with_text",
-                "edit_images": [{"image": {"base64": ref_b64}, "width": rw, "height": rh}],
+                "edit_images": [{"image": {"base64": ref_b64}, "size": {"width": rw, "height": rh}}],
                 "image_size": {"width": width, "height": height},
                 "description": description,
                 "no_background": no_background,
@@ -96,7 +95,7 @@ def register(mcp) -> None:
             edit_b64 = image_utils.path_to_png_b64(edit_image_path)
             edit_img = Image.open(edit_image_path)
             ew, eh = edit_img.size
-            payload["edit_images"] = [{"image": {"base64": edit_b64}, "width": ew, "height": eh}]
+            payload["edit_images"] = [{"image": {"base64": edit_b64}, "size": {"width": ew, "height": eh}}]
 
         result = await http_client.call_async("edit-images-v2", payload)
         images = image_utils.extract_images(result)
@@ -165,7 +164,7 @@ def register(mcp) -> None:
             b64 = image_utils.path_to_png_b64(p)
             img = Image.open(p)
             w, h = img.size
-            edit_images.append({"image": {"base64": b64}, "width": w, "height": h})
+            edit_images.append({"image": {"base64": b64}, "size": {"width": w, "height": h}})
 
         payload = {
             "method": "edit_with_text",
@@ -194,8 +193,16 @@ def register(mcp) -> None:
         direction: str = "none",
         text_guidance_scale: float = 3.0,
         no_background: bool = True,
+        outline: str = "",
+        shading: str = "",
+        detail: str = "",
+        isometric: bool = False,
+        oblique_projection: bool = False,
+        init_image_strength: int = 300,
         seed: int = 0,
         color_image_path: Optional[str] = None,
+        init_image_path: Optional[str] = None,
+        negative_description: Optional[str] = None,
     ) -> str:
         """Edit a region of an image using a separate mask (V2 API).
 
@@ -206,6 +213,13 @@ def register(mcp) -> None:
             inpainting_image_path: The original image to edit.
             mask_image_path: Mask image (white areas = regenerate, black = keep).
             description: What to generate in the masked area.
+            outline: none / single color black outline / selective outline / lineless.
+            shading: none / basic shading / medium shading.
+            detail: low detail / medium detail / high detail.
+            isometric: True = isometric projection.
+            oblique_projection: True = oblique projection.
+            init_image_path: Optional init image for fine-grained control.
+            negative_description: What to avoid in the generated area.
         """
         payload = {
             "inpainting_image": {"base64": image_utils.path_to_png_b64(inpainting_image_path)},
@@ -216,10 +230,23 @@ def register(mcp) -> None:
             "direction": direction,
             "text_guidance_scale": text_guidance_scale,
             "no_background": no_background,
+            "isometric": isometric,
+            "oblique_projection": oblique_projection,
+            "init_image_strength": init_image_strength,
             "seed": seed,
         }
+        if outline:
+            payload["outline"] = outline
+        if shading:
+            payload["shading"] = shading
+        if detail:
+            payload["detail"] = detail
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
+        if init_image_path:
+            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
+        if negative_description:
+            payload["negative_description"] = negative_description
 
         result = await http_client.call("inpaint", payload)
         images = image_utils.extract_images(result)
@@ -274,29 +301,26 @@ def register(mcp) -> None:
         image_path: str,
         output_dir: str,
         text: str = "",
-        background_removal_task: str = "Simple",
+        background_removal_task: str = "remove_simple_background",
         seed: int = 0,
     ) -> str:
         """Remove the background from a pixel art sprite.
 
         Args:
             image_path: Sprite to process.
-            text: Description hint, only used when background_removal_task="Complex".
-            background_removal_task: "Simple" or "Complex".
+            text: Description hint of the foreground object to help with removal.
+            background_removal_task: "remove_simple_background" or "remove_complex_background".
         """
         img = Image.open(image_path).convert("RGBA")
         width, height = img.size
 
-        task_map = {"Simple": "remove_simple_background", "Complex": "remove_complex_background"}
-        api_task = task_map.get(background_removal_task, background_removal_task)
-
         payload = {
             "image": {"base64": image_utils.path_to_png_b64(image_path)},
             "image_size": {"width": width, "height": height},
-            "background_removal_task": api_task,
+            "background_removal_task": background_removal_task,
             "seed": seed,
         }
-        if api_task == "remove_complex_background" and text:
+        if text:
             payload["text"] = text
 
         result = await http_client.call("remove-background", payload)
@@ -316,8 +340,12 @@ def register(mcp) -> None:
         view: str = "none",
         direction: str = "none",
         no_background: bool = False,
+        isometric: bool = False,
+        oblique_projection: bool = False,
         seed: int = 0,
         color_image_path: Optional[str] = None,
+        init_image_path: Optional[str] = None,
+        init_image_strength: int = 300,
     ) -> str:
         """Intelligently resize a pixel art image to new dimensions while preserving style.
 
@@ -327,6 +355,9 @@ def register(mcp) -> None:
             reference_image_path: Original sprite to resize.
             width/height: Target output dimensions (16-200).
             description: Optional description to guide the resize.
+            isometric: True = isometric perspective.
+            oblique_projection: True = oblique projection (beta).
+            init_image_path: Optional initial image to start from.
         """
         ref_b64 = image_utils.path_to_png_b64(reference_image_path)
         ref_img = Image.open(reference_image_path)
@@ -339,11 +370,16 @@ def register(mcp) -> None:
             "target_size": {"width": width, "height": height},
             "view": view,
             "direction": direction,
+            "isometric": isometric,
+            "oblique_projection": oblique_projection,
             "no_background": no_background,
+            "init_image_strength": init_image_strength,
             "seed": seed,
         }
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
+        if init_image_path:
+            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
 
         result = await http_client.call("resize", payload)
         images = image_utils.extract_images(result)

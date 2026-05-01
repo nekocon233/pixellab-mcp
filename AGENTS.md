@@ -3,7 +3,7 @@
 ## Project overview
 
 MCP server wrapping the **PixelLab V2 REST API** (`https://api.pixellab.ai/v2/<endpoint>`).
-46 MCP tools covering pixel-art generation, animation, editing, characters, tiles, objects, and management.
+61 MCP tools covering pixel-art generation, animation, editing, characters, tiles, objects, and management.
 
 ## Architecture
 
@@ -14,14 +14,14 @@ pixellab_mcp/
 └── tools/
     ├── http_client.py # REST HTTP client: call(), call_async(), get(), delete(), patch()
     ├── image_utils.py # path_to_png_b64 / path_to_rgba_b64 / save_response_images / extract_images
-    ├── generate.py    # 7 tools: pixflux, bitforge, style, general, xl, image_to_pixelart
+    ├── generate.py    # 9 tools: pixflux, consistent_style, bitforge, style, general, xl, image_to_pixelart, pixen, ui_element
     ├── animate.py     # 5 tools: movement, animate_text, animate_text_v3, animation, interpolation
     ├── edit.py        # 9 tools: edit, edit_pro, edit_animation, multi_edit, inpaint, inpaint_v3, remove_bg, resize, transfer_outfit
-    ├── character.py   # 5 tools: complete_char, estimate_skeleton, animate_skeleton, pose, pose_animation
-    ├── rotate.py      # 5 tools: rotate_single, rotations, 4_rotations, 8_rotations, ref_to_8_rotations
+    ├── character.py   # 6 tools: complete_char, estimate_skeleton, animate_skeleton, pose, pose_animation, animate_character
+    ├── rotate.py      # 6 tools: rotate_single, rotations, 4_rotations, 8_rotations, ref_to_8_rotations, 8_rotations_v3
     ├── tiles.py       # 4 tools: tileset, tileset_sidescroller, tiles_pro, isometric_tile
-    ├── objects.py     # 2 tools: map_object, object_4_directions
-    └── management.py  # 8 tools: character/object CRUD + balance
+    ├── objects.py     # 6 tools: map_object, create_object, animate_object, vary_object, select_object_frames, dismiss_object_review
+    └── management.py  # 15 tools: character CRUD (5), object CRUD (4), tileset/tile listing (6) — plus get_balance in server.py
 ```
 
 Each tool module exposes a single `register(mcp: FastMCP)` function; `server.py` calls them all at startup.

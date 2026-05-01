@@ -1,6 +1,6 @@
 # pixellab-mcp
 
-MCP server wrapping the **PixelLab V2 REST API** — 46 pixel-art generation tools exposed as MCP tools.
+MCP server wrapping the **PixelLab V2 REST API** — 61 pixel-art generation tools exposed as MCP tools.
 Supports generation, animation, editing, character/object management, tiles, and more.
 
 ## Quick start
@@ -75,7 +75,7 @@ pixellab-mcp
 
 ## Tool catalogue
 
-### Generate (7 tools)
+### Generate (9 tools)
 
 | Tool | Description |
 |---|---|
@@ -86,6 +86,8 @@ pixellab-mcp
 | `general_generate` | General pixel art scenes and backgrounds |
 | `general_xl_generate` | Large-format scenes up to 792x688 (Pro) |
 | `image_to_pixelart` | Convert any photo/artwork to pixel art |
+| `pixen_generate` | Pixel art generation using Pixen model (max 768x768, supports negative prompt) |
+| `generate_ui_element` | Generate pixel art UI elements (buttons, health bars, icons, frames) |
 
 ### Animate (5 tools)
 
@@ -111,17 +113,18 @@ pixellab-mcp
 | `resize_generate` | Intelligent content-aware resize |
 | `transfer_outfit_pro` | Transfer outfit across all animation frames |
 
-### Character (5 tools)
+### Character (6 tools)
 
 | Tool | Description |
 |---|---|
 | `complete_character_generate` | Multi-direction character views (4 or 8 directions) |
 | `estimate_skeleton` | Extract skeleton keypoints from a character image |
-| `animate_with_skeleton` | Animate using skeleton keypoint control |
+| `animate_with_skeleton` | Animate using skeleton pose control |
 | `pose_generate` | Generate character in a specific skeleton pose |
 | `pose_animation_generate` | Multi-frame animation driven by skeleton keypoints |
+| `animate_character` | Animate existing character (created via complete_character_generate) |
 
-### Rotate (5 tools)
+### Rotate (6 tools)
 
 | Tool | Description |
 |---|---|
@@ -130,6 +133,7 @@ pixellab-mcp
 | `four_rotations_generate` | Generate 4-directional frames from text |
 | `eight_rotations_generate` | Generate 8-directional frames from text |
 | `reference_to_8_rotations` | Generate all 8 rotations from concept + style image |
+| `generate_8_rotations_v3` | Generate 8 rotations from a single reference frame (v3 quality) |
 
 ### Tiles (4 tools)
 
@@ -140,14 +144,20 @@ pixellab-mcp
 | `tiles_pro_generate` | Pro tiles: isometric, hex, octagon |
 | `create_isometric_tile` | Single isometric tile (block / thick / thin) |
 
-### Objects (2 tools)
+### Objects (6 tools)
 
 | Tool | Description |
 |---|---|
-| `create_map_object` | Generate map object (tree, rock, chest, etc.) |
-| `create_object_4_directions` | Object with 4 directional views |
+| `create_map_object` | Generate map object for top-down games (tree, rock, chest, etc.) |
+| `create_object` | Create object using Objects pipeline (returns object_id) |
+| `animate_object` | Animate existing object in a specific direction |
+| `vary_object` | Create variation of existing object by text edit |
+| `select_object_frames` | Promote selected frames of review-status object |
+| `dismiss_object_review` | Dismiss review-status object without saving |
 
-### Management (8 tools)
+### Management (15 tools)
+
+**Character Management:**
 
 | Tool | Description |
 |---|---|
@@ -156,10 +166,26 @@ pixellab-mcp
 | `delete_character` | Delete a character |
 | `export_character_zip` | Export character as ZIP |
 | `update_character_tags` | Update character tags |
+
+**Object Management:**
+
+| Tool | Description |
+|---|---|
 | `list_objects` | List your objects (paginated) |
 | `get_object` | Get object details |
 | `delete_object` | Delete an object |
 | `update_object_tags` | Update object tags |
+
+**Tile/Tileset Management:**
+
+| Tool | Description |
+|---|---|
+| `list_tilesets` | List all tilesets |
+| `get_tileset` | Get tileset details by UUID |
+| `list_isometric_tiles` | List all isometric tiles |
+| `get_isometric_tile` | Get isometric tile by UUID |
+| `list_tiles_pro` | List all pro tiles |
+| `get_tiles_pro` | Get pro tile by UUID |
 
 ### Account (1 tool)
 

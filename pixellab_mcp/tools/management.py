@@ -87,7 +87,7 @@ def register(mcp) -> None:
         """
         tag_list = json.loads(tags)
         result = await http_client.patch(
-            f"characters/{character_id}",
+            f"characters/{character_id}/tags",
             {"tags": tag_list},
         )
         return f"Updated tags for character {character_id}."
@@ -145,7 +145,93 @@ def register(mcp) -> None:
         """
         tag_list = json.loads(tags)
         result = await http_client.patch(
-            f"objects/{object_id}",
+            f"objects/{object_id}/tags",
             {"tags": tag_list},
         )
         return f"Updated tags for object {object_id}."
+
+    # ── Tileset / Tile management ─────────────────────────────────────────────
+
+    @mcp.tool()
+    async def list_tilesets(
+        limit: int = 50,
+        offset: int = 0,
+    ) -> str:
+        """List all tilesets (top-down and sidescroller) created by you (paginated).
+
+        Args:
+            limit: Results per page (1-100).
+            offset: Pagination offset.
+        """
+        result = await http_client.get("tilesets", {"limit": limit, "offset": offset})
+        return json.dumps(result, indent=2)
+
+    @mcp.tool()
+    async def get_tileset(
+        tileset_id: str,
+    ) -> str:
+        """Retrieve a completed tileset by its UUID.
+
+        Returns 423 (still generating) until the tileset is ready.
+
+        Args:
+            tileset_id: The tileset UUID.
+        """
+        result = await http_client.get(f"tilesets/{tileset_id}")
+        return json.dumps(result, indent=2)
+
+    @mcp.tool()
+    async def list_isometric_tiles(
+        limit: int = 50,
+        offset: int = 0,
+    ) -> str:
+        """List all isometric tiles created by you (paginated).
+
+        Args:
+            limit: Results per page (1-100).
+            offset: Pagination offset.
+        """
+        result = await http_client.get("isometric-tiles", {"limit": limit, "offset": offset})
+        return json.dumps(result, indent=2)
+
+    @mcp.tool()
+    async def get_isometric_tile(
+        tile_id: str,
+    ) -> str:
+        """Retrieve a completed isometric tile by its UUID.
+
+        Returns 423 (still generating) until the tile is ready.
+
+        Args:
+            tile_id: The isometric tile UUID.
+        """
+        result = await http_client.get(f"isometric-tiles/{tile_id}")
+        return json.dumps(result, indent=2)
+
+    @mcp.tool()
+    async def list_tiles_pro(
+        limit: int = 50,
+        offset: int = 0,
+    ) -> str:
+        """List all tiles-pro created by you (paginated).
+
+        Args:
+            limit: Results per page (1-100).
+            offset: Pagination offset.
+        """
+        result = await http_client.get("tiles-pro", {"limit": limit, "offset": offset})
+        return json.dumps(result, indent=2)
+
+    @mcp.tool()
+    async def get_tiles_pro(
+        tile_id: str,
+    ) -> str:
+        """Retrieve completed tiles-pro by their UUID.
+
+        Returns 423 (still generating) until the tiles are ready.
+
+        Args:
+            tile_id: The tiles-pro UUID.
+        """
+        result = await http_client.get(f"tiles-pro/{tile_id}")
+        return json.dumps(result, indent=2)
