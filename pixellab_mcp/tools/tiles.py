@@ -60,12 +60,15 @@ def register(mcp) -> None:
             "tileset_adherence": tileset_adherence,
             "tileset_adherence_freedom": tileset_adherence_freedom,
             "tile_strength": tile_strength,
-            "outline": outline,
-            "shading": shading,
-            "detail": detail,
             "view": view,
             "seed": seed,
         }
+        if outline:
+            payload["outline"] = outline
+        if shading:
+            payload["shading"] = shading
+        if detail:
+            payload["detail"] = detail
         if lower_reference_path:
             payload["lower_reference_image"] = {"base64": image_utils.path_to_png_b64(lower_reference_path)}
         if upper_reference_path:
@@ -130,11 +133,14 @@ def register(mcp) -> None:
             "tileset_adherence": tileset_adherence,
             "tileset_adherence_freedom": tileset_adherence_freedom,
             "tile_strength": tile_strength,
-            "outline": outline,
-            "shading": shading,
-            "detail": detail,
             "seed": seed,
         }
+        if outline:
+            payload["outline"] = outline
+        if shading:
+            payload["shading"] = shading
+        if detail:
+            payload["detail"] = detail
         if lower_reference_path:
             payload["lower_reference_image"] = {"base64": image_utils.path_to_png_b64(lower_reference_path)}
         if transition_reference_path:

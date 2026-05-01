@@ -21,7 +21,6 @@ def register(mcp) -> None:
         outline: str = "selective outline",
         shading: str = "basic shading",
         detail: str = "medium detail",
-        no_background: bool = True,
         seed: int = 0,
         init_image_path: Optional[str] = None,
         init_image_strength: int = 300,
@@ -35,7 +34,6 @@ def register(mcp) -> None:
             description: Object description e.g. "oak tree", "treasure chest", "stone wall".
             width/height: Image size (32-400).
             view: low top-down / high top-down / side.
-            no_background: True = transparent background.
             background_image_path: Optional background image to place the object on.
             inpainting: JSON inpainting config. Supports mask (custom), oval, or rectangle types.
                         Example: '{"type": "oval"}' or '{"type": "rectangle", "padding": 16}'.
@@ -48,7 +46,6 @@ def register(mcp) -> None:
             "outline": outline,
             "shading": shading,
             "detail": detail,
-            "no_background": no_background,
             "init_image_strength": init_image_strength,
             "seed": seed,
         }
