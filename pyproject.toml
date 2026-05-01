@@ -4,15 +4,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pixellab-mcp"
-version = "0.1.0"
-description = "MCP server wrapping the PixelLab private WebSocket API – all 44+ endpoints as MCP tools"
+version = "0.2.0"
+description = "MCP server wrapping the PixelLab V2 REST API – 48 tools for pixel art generation"
 requires-python = ">=3.11"
 dependencies = [
     "mcp[cli]>=1.9.0",
-    "websockets>=12.0",
+    "httpx>=0.27.0",
     "python-dotenv>=1.0.0",
     "Pillow>=10.0.0",
-    "pixellab>=1.0.5",
 ]
 
 [project.scripts]

@@ -1,8 +1,8 @@
-﻿"""
-Pixel Lab MCP Server – private WebSocket API edition
-=====================================================
+"""
+Pixel Lab MCP Server – V2 REST API edition
+===========================================
 
-Wraps all 44+ PixelLab private WebSocket endpoints as MCP tools via FastMCP.
+Wraps all PixelLab V2 REST API endpoints as MCP tools via FastMCP.
 
 Run (stdio transport):
     pixellab-mcp                         # after pip install -e .
@@ -30,7 +30,7 @@ mcp = FastMCP("pixellab-mcp")
 
 # ── Register all tool groups ──────────────────────────────────────────────────
 
-from pixellab_mcp.tools import generate, rotate, animate, edit, character, tiles, utils  # noqa: E402
+from pixellab_mcp.tools import generate, rotate, animate, edit, character, tiles, objects, management  # noqa: E402
 
 generate.register(mcp)
 rotate.register(mcp)
@@ -38,16 +38,14 @@ animate.register(mcp)
 edit.register(mcp)
 character.register(mcp)
 tiles.register(mcp)
-utils.register(mcp)
-
-# ── Bonus: account balance via public SDK ─────────────────────────────────────
-
-import pixellab as _pl  # noqa: E402
+objects.register(mcp)
+management.register(mcp)
 
 
+# ── Account balance ───────────────────────────────────────────────────────────
 
 @mcp.tool()
-def get_balance() -> str:
+async def get_balance() -> str:
     """Return the prepaid Pixel Lab credit balance in USD.
 
     DO NOT call this proactively before or after generation tools. Subscription
@@ -56,9 +54,17 @@ def get_balance() -> str:
     will fail. Only call this tool when the user explicitly asks about their
     prepaid credit balance.
     """
-    client = _pl.Client(secret=os.getenv("PIXELLAB_SECRET", ""))
-    balance = client.get_balance()
-    return f"Prepaid credit balance: {balance.usd} USD (subscription quota not included)"
+    from pixellab_mcp.tools import http_client
+    result = await http_client.get("balance")
+    credits = result.get("credits", {})
+    usd = credits.get("usd", 0)
+    subscription = result.get("subscription", {})
+    gens = subscription.get("generations", "N/A")
+    total = subscription.get("total", "N/A")
+    return (
+        f"Prepaid credit balance: {usd} USD\n"
+        f"Subscription quota: {gens}/{total} generations"
+    )
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────

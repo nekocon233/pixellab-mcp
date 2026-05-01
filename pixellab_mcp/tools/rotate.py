@@ -1,13 +1,15 @@
 """Tools: sprite rotation / view-change."""
 from typing import List, Optional
 
+from PIL import Image
+
 from . import image_utils
-from . import ws_client
+from . import http_client
 
 
 def register(mcp) -> None:
 
-    # ── 1. Single rotation ───────────────────────────────────────────────────
+    # ── 1. Single rotation ──────────────────────────────────────────────────
 
     @mcp.tool()
     async def rotate_single(
@@ -18,10 +20,10 @@ def register(mcp) -> None:
         view_change: int = 0,
         direction_change: int = 45,
         image_guidance_scale: float = 3.0,
-        init_image_strength: int = 300,
         seed: int = 0,
         color_image_path: Optional[str] = None,
         init_image_path: Optional[str] = None,
+        init_image_strength: int = 300,
     ) -> str:
         """Rotate a sprite by a specific view/direction offset.
 
@@ -31,30 +33,28 @@ def register(mcp) -> None:
             from_image_path: Source sprite to rotate.
             view_change: Vertical tilt change in degrees (e.g. 0).
             direction_change: Horizontal rotation in degrees (e.g. 45, 90, 135, -45).
-            image_guidance_scale: How closely to follow the source image (1–10).
+            image_guidance_scale: How closely to follow the source image (1-20).
         """
         payload = {
-            "from_image": image_utils.path_to_png_b64(from_image_path),
+            "from_image": {"base64": image_utils.path_to_png_b64(from_image_path)},
             "image_size": {"width": width, "height": height},
-            "view_change": str(view_change),
-            "direction_change": str(direction_change),
+            "view_change": view_change,
+            "direction_change": direction_change,
             "image_guidance_scale": image_guidance_scale,
             "init_image_strength": init_image_strength,
-            "use_inpainting": False,
-            "seed": str(seed),
+            "seed": seed,
         }
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
         if init_image_path:
-            payload["init_image"] = image_utils.path_to_png_b64(init_image_path)
+            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
 
-        payload["model_name"] = "generate_rotate_single"
-        result = await ws_client.call("generate-rotate-single", payload)
+        result = await http_client.call("rotate", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "rotate_single", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
-    # ── 2. Multi-direction rotations ─────────────────────────────────────────
+    # ── 2. Multi-direction rotations ───────────────────────────────────────
 
     @mcp.tool()
     async def rotations_generate(
@@ -62,45 +62,53 @@ def register(mcp) -> None:
         output_dir: str,
         width: int = 64,
         height: int = 64,
-        view: str = "low top-down",
-        image_guidance_scale: float = 2.0,
-        text_guidance_scale: float = 8.0,
-        init_image_strength: int = 300,
-        forced_symmetry: bool = False,
+        image_guidance_scale: float = 3.0,
         seed: int = 0,
         color_image_path: Optional[str] = None,
     ) -> str:
         """Generate all cardinal rotations (S/E/N/W) for a character from existing views.
 
         Provide paths to existing direction images in rotation_image_paths
-        (order: South, East, North, West).  Missing views are generated.
+        (order: South, East, North, West). Missing views are generated
+        by calling the rotate endpoint for each needed direction.
 
         Args:
-            rotation_image_paths: List of 1–4 paths to existing direction frames.
-            view: low top-down / high top-down / side
-            forced_symmetry: Mirror-copy left↔right symmetrical directions.
+            rotation_image_paths: List of 1-4 paths to existing direction frames.
         """
-        rotation_images = [image_utils.path_to_png_b64(p) for p in rotation_image_paths]
-        payload = {
-            "rotation_images": rotation_images,
-            "image_size": {"width": width, "height": height},
-            "view": view,
-            "image_guidance_scale": image_guidance_scale,
-            "text_guidance_scale": text_guidance_scale,
-            "init_image_strength": init_image_strength,
-            "forced_symmetry": forced_symmetry,
-            "seed": str(seed),
-        }
-        if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+        # Direction offsets from south: S=0, E=90, N=180, W=-90 (or 270)
+        direction_offsets = [0, 90, 180, -90]
+        all_paths: List[str] = []
 
-        payload["model_name"] = "generate_rotations"
-        result = await ws_client.call("generate-rotations", payload)
-        images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "rotations", output_dir)
-        return f"Saved {len(paths)} rotation(s):\n" + "\n".join(paths)
+        # Use provided images directly
+        for i, path in enumerate(rotation_image_paths):
+            all_paths.append(path)
 
-    # ── 3. Generate 4 rotations from text ────────────────────────────────────
+        # Generate missing directions from the first (south) image
+        south_image = rotation_image_paths[0] if rotation_image_paths else None
+        if not south_image:
+            return "Error: at least one rotation image path is required"
+
+        for i in range(len(rotation_image_paths), 4):
+            payload = {
+                "from_image": {"base64": image_utils.path_to_png_b64(south_image)},
+                "image_size": {"width": width, "height": height},
+                "direction_change": direction_offsets[i],
+                "image_guidance_scale": image_guidance_scale,
+                "seed": seed,
+            }
+            if color_image_path:
+                payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
+
+            result = await http_client.call("rotate", payload)
+            images = image_utils.extract_images(result)
+            paths = image_utils.save_response_images(
+                images, width, height, f"rotation_{['S','E','N','W'][i]}", output_dir
+            )
+            all_paths.extend(paths)
+
+        return f"Generated {len(all_paths)} rotation(s):\n" + "\n".join(all_paths)
+
+    # ── 3. Generate 4 rotations from text ──────────────────────────────────
 
     @mcp.tool()
     async def four_rotations_generate(
@@ -108,48 +116,38 @@ def register(mcp) -> None:
         output_dir: str,
         width: int = 32,
         height: int = 32,
-        view: str = "side",
         text_guidance_scale: float = 8.0,
-        template_name: str = "female-humanoid",
-        category: str = "realistic",
+        view: str = "low top-down",
         outline: str = "selective outline",
         shading: str = "basic shading",
         detail: str = "medium detail",
-        ai_freedom: int = 0,
         seed: int = 0,
         color_image_path: Optional[str] = None,
     ) -> str:
         """Generate 4 directional frames (N/E/S/W) for a new character from text.
 
         Args:
-            template_name: female-humanoid / male-humanoid / etc.
-            ai_freedom: 0 = template-strict; higher = more creative
+            view: low top-down / high top-down / side
         """
         payload = {
             "description": description,
             "image_size": {"width": width, "height": height},
             "text_guidance_scale": text_guidance_scale,
             "view": view,
-            "template_name": template_name,
-            "category": category,
             "outline": outline,
             "shading": shading,
             "detail": detail,
-            "ai_freedom": ai_freedom,
-            "n_rows": 4,
-            "n_columns": 1,
-            "seed": str(seed),
+            "seed": seed,
         }
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
-        payload["model_name"] = "generate_4_rotations"
-        result = await ws_client.call("generate-4-rotations", payload)
+        result = await http_client.call_async("create-character-with-4-directions", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "4_rotations", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
 
-    # ── 4. Generate 8 rotations from text ────────────────────────────────────
+    # ── 4. Generate 8 rotations from text ──────────────────────────────────
 
     @mcp.tool()
     async def eight_rotations_generate(
@@ -157,48 +155,38 @@ def register(mcp) -> None:
         output_dir: str,
         width: int = 32,
         height: int = 32,
-        view: str = "side",
         text_guidance_scale: float = 8.0,
-        template_name: str = "female-humanoid",
-        category: str = "realistic",
+        view: str = "low top-down",
         outline: str = "selective outline",
         shading: str = "basic shading",
         detail: str = "medium detail",
-        ai_freedom: int = 0,
         seed: int = 0,
         color_image_path: Optional[str] = None,
     ) -> str:
         """Generate 8 directional frames (all eight compass directions) for a new character from text.
 
         Args:
-            template_name: female-humanoid / male-humanoid / etc.
-            ai_freedom: 0 = template-strict; higher = more creative
+            view: low top-down / high top-down / side
         """
         payload = {
             "description": description,
             "image_size": {"width": width, "height": height},
             "text_guidance_scale": text_guidance_scale,
             "view": view,
-            "template_name": template_name,
-            "category": category,
             "outline": outline,
             "shading": shading,
             "detail": detail,
-            "ai_freedom": ai_freedom,
-            "n_rows": 1,
-            "n_columns": 8,
-            "seed": str(seed),
+            "seed": seed,
         }
         if color_image_path:
-            payload["color_image"] = image_utils.path_to_png_b64(color_image_path)
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
 
-        payload["model_name"] = "generate_8_rotations"
-        result = await ws_client.call("generate-8-rotations", payload)
+        result = await http_client.call_async("create-character-with-8-directions", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "8_rotations", output_dir)
         return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
 
-    # ── 5. Reference → 8 rotations ───────────────────────────────────────────
+    # ── 5. Reference → 8 rotations ─────────────────────────────────────────
 
     @mcp.tool()
     async def reference_to_8_rotations(
@@ -210,7 +198,6 @@ def register(mcp) -> None:
         height: int = 64,
         view: str = "low top-down",
         style_description: str = "",
-        method: str = "create_with_style",
         no_background: bool = True,
         seed: int = 0,
     ) -> str:
@@ -219,21 +206,27 @@ def register(mcp) -> None:
         Args:
             concept_image_path: Sketch or concept art showing the character shape.
             reference_image_path: Style reference pixel art image.
-            method: create_with_style / other
         """
+        concept_b64 = image_utils.path_to_png_b64(concept_image_path)
+        concept_img = Image.open(concept_image_path)
+        cw, ch = concept_img.size
+
+        ref_b64 = image_utils.path_to_png_b64(reference_image_path)
+        ref_img = Image.open(reference_image_path)
+        rw, rh = ref_img.size
+
         payload = {
+            "method": "create_from_concept",
             "description": description,
             "style_description": style_description,
-            "display_concept_image": image_utils.path_to_png_b64(concept_image_path),
-            "display_reference_image": image_utils.path_to_png_b64(reference_image_path),
+            "concept_image": {"image": {"base64": concept_b64}, "width": cw, "height": ch},
+            "reference_image": {"image": {"base64": ref_b64}, "width": rw, "height": rh},
             "image_size": {"width": width, "height": height},
             "view": view,
-            "method": method,
             "no_background": no_background,
-            "seed": str(seed),
+            "seed": seed,
         }
-        payload["model_name"] = "reference_to_8_rotations"
-        result = await ws_client.call("generate-reference-to-8-rotations", payload)
+        result = await http_client.call_async("generate-8-rotations-v2", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "ref_to_8rot", output_dir)
         return f"Saved {len(paths)} rotation(s):\n" + "\n".join(paths)

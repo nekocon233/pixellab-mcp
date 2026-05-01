@@ -1,129 +1,17 @@
 """Tools: image generation (text → pixel art)."""
+import base64
+import io
 from typing import Optional
 
+from PIL import Image
+
 from . import image_utils
-from . import ws_client
+from . import http_client
 
 
 def register(mcp) -> None:
 
-    # ── 1. Consistent-style (best style matching, RGBA encoding) ─────────────
-
-    @mcp.tool()
-    async def consistent_style_generate(
-        description: str,
-        style_image_path: str,
-        output_dir: str,
-        width: int = 64,
-        height: int = 64,
-        style_description: str = "",
-        no_background: bool = True,
-        output_format: str = "frames",
-        seed: int = 0,
-    ) -> str:
-        """Generate pixel art frames that match the visual style of a reference image.
-
-        This is the highest-quality style-matching tool – equivalent to Aseprite's
-        "Create images from style references" (Pro) feature.  The reference image is
-        encoded as raw RGBA for maximum fidelity.
-
-        Frame count depends on sprite size (tier-1 limits):
-          ≤32 px  → up to 64 frames
-          33-64 px → up to 16 frames
-          65-128 px → up to 4 frames
-
-        Args:
-            description: What to generate, e.g. "warrior with sword".
-            style_image_path: Local path to the style reference sprite (RGBA PNG).
-            width: Output image width in pixels (max 512 for tier-2).
-            height: Output image height in pixels.
-            style_description: Additional style hints.
-            no_background: True = transparent background.
-            output_format: "frames" returns all generated frames.
-            seed: 0 = random.
-        """
-        b64, w, h = image_utils.path_to_rgba_b64(style_image_path)
-        payload = {
-            "description": description,
-            "style_description": style_description,
-            "style_images": [{"base64": b64, "width": w, "height": h}],
-            "image_size": {"width": width, "height": height},
-            "no_background": no_background,
-            "output_format": output_format,
-            "seed": str(seed),
-        }
-        payload["model_name"] = "generate_consistent_style"
-        result = await ws_client.call("generate-consistent-style", payload)
-        images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "consistent_style", output_dir)
-        return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
-
-    # ── 2. Flux same-style ────────────────────────────────────────────────────
-
-    @mcp.tool()
-    async def pixflux_same_style_generate(
-        description: str,
-        style_image_path: str,
-        output_dir: str,
-        width: int = 64,
-        height: int = 64,
-        text_guidance_scale: float = 8.0,
-        no_background: bool = True,
-        view: str = "none",
-        direction: str = "none",
-        outline: str = "",
-        shading: str = "",
-        detail: str = "",
-        init_image_strength: int = 300,
-        seed: int = 0,
-        color_image_path: Optional[str] = None,
-        init_image_path: Optional[str] = None,
-    ) -> str:
-        """Generate a single pixel art image in the exact style of a reference, using the Flux model.
-
-        Good for style-consistent single-frame assets.
-        Max canvas: 128×128 pixels (area ≤ 128*128).
-
-        Args:
-            view: side / low top-down / high top-down / none
-            direction: north / east / south / west / none
-            outline: e.g. "single color black outline" / "selective outline" / ""
-            shading: e.g. "basic shading" / ""
-            detail: e.g. "medium detail" / "low detail" / ""
-        """
-        blank = {"base64": ""}
-        payload = {
-            "description": description,
-            "style_image": {"base64": image_utils.path_to_png_b64(style_image_path)},
-            "image_size": {"width": width, "height": height},
-            "text_guidance_scale": text_guidance_scale,
-            "no_background": no_background,
-            "view": view,
-            "direction": direction,
-            "outline": outline,
-            "shading": shading,
-            "detail": detail,
-            "seed": str(seed),
-            "isometric": False,
-            "oblique_projection": False,
-            "init_image": blank,
-            "init_image_strength": init_image_strength,
-            "color_image": blank,
-            "output_method": "New frame",
-            "model_name": "generate_flux_same_style",
-        }
-        if color_image_path:
-            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
-        if init_image_path:
-            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
-            payload["init_image_strength"] = init_image_strength
-
-        result = await ws_client.call("generate-flux-same-style", payload)
-        images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(images, width, height, "flux_same_style", output_dir)
-        return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
-
-    # ── 3. Pixelart Flux ──────────────────────────────────────────────────────
+    # ── 1. Pixelart Flux ──────────────────────────────────────────────────────
 
     @mcp.tool()
     async def pixelart_flux_generate(
@@ -138,14 +26,13 @@ def register(mcp) -> None:
         outline: str = "single color black outline",
         shading: str = "basic shading",
         detail: str = "medium detail",
-        map_tile: bool = False,
         isometric: bool = False,
-        init_image_strength: int = 150,
+        init_image_strength: int = 300,
         seed: int = 0,
         color_image_path: Optional[str] = None,
         init_image_path: Optional[str] = None,
     ) -> str:
-        """Generate pixel art from text using the Pixelart Flux model (general-purpose).
+        """Generate pixel art from text using the Pixflux model (general-purpose).
 
         Args:
             view: side / low top-down / high top-down / none
@@ -153,10 +40,8 @@ def register(mcp) -> None:
             outline: none / single color black outline / selective outline / lineless
             shading: none / basic shading / medium shading
             detail: low detail / medium detail / high detail
-            map_tile: true = tileable map tile output
             isometric: true = isometric projection
         """
-        blank = {"base64": ""}
         payload = {
             "description": description,
             "image_size": {"width": width, "height": height},
@@ -167,29 +52,123 @@ def register(mcp) -> None:
             "outline": outline,
             "shading": shading,
             "detail": detail,
-            "seed": str(seed),
-            "map_tile": map_tile,
             "isometric": isometric,
-            "oblique_projection": False,
-            "modifier": "none",
-            "init_image": blank,
             "init_image_strength": init_image_strength,
-            "color_image": blank,
-            "output_method": "New frame",
-            "model_name": "generate_pixelart_flux",
+            "seed": seed,
         }
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
         if init_image_path:
             payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
-            payload["init_image_strength"] = init_image_strength
 
-        result = await ws_client.call("generate-pixelart-flux", payload)
+        result = await http_client.call("create-image-pixflux", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "pixelart_flux", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
-    # ── 4. Style-controlled generation ───────────────────────────────────────
+    # ── 2. Consistent-style (best style matching) ────────────────────────────
+
+    @mcp.tool()
+    async def consistent_style_generate(
+        description: str,
+        style_image_path: str,
+        output_dir: str,
+        width: int = 64,
+        height: int = 64,
+        style_description: str = "",
+        no_background: bool = True,
+        seed: int = 0,
+    ) -> str:
+        """Generate pixel art frames that match the visual style of a reference image.
+
+        This is the highest-quality style-matching tool.
+
+        Args:
+            description: What to generate, e.g. "warrior with sword".
+            style_image_path: Local path to the style reference sprite (PNG).
+            width: Output image width in pixels (max 512).
+            height: Output image height in pixels.
+            style_description: Additional style hints.
+            no_background: True = transparent background.
+            seed: 0 = random.
+        """
+        style_b64 = image_utils.path_to_png_b64(style_image_path)
+        style_img = Image.open(style_image_path)
+        sw, sh = style_img.size
+        payload = {
+            "style_images": [{"image": {"base64": style_b64}, "width": sw, "height": sh}],
+            "description": description,
+            "image_size": {"width": width, "height": height},
+            "style_description": style_description,
+            "no_background": no_background,
+            "seed": seed,
+        }
+        result = await http_client.call_async("generate-with-style-v2", payload)
+        images = image_utils.extract_images(result)
+        paths = image_utils.save_response_images(images, width, height, "consistent_style", output_dir)
+        return f"Saved {len(paths)} frame(s):\n" + "\n".join(paths)
+
+    # ── 3. Flux same-style (Bitforge) ────────────────────────────────────────
+
+    @mcp.tool()
+    async def pixflux_same_style_generate(
+        description: str,
+        style_image_path: str,
+        output_dir: str,
+        width: int = 64,
+        height: int = 64,
+        text_guidance_scale: float = 8.0,
+        style_strength: float = 50.0,
+        no_background: bool = True,
+        view: str = "none",
+        direction: str = "none",
+        outline: str = "",
+        shading: str = "",
+        detail: str = "",
+        init_image_strength: int = 300,
+        seed: int = 0,
+        color_image_path: Optional[str] = None,
+        init_image_path: Optional[str] = None,
+    ) -> str:
+        """Generate a single pixel art image in the exact style of a reference, using the Bitforge model.
+
+        Good for style-consistent single-frame assets.
+        Max canvas: 200x200 pixels.
+
+        Args:
+            style_strength: 0-100, how strongly to match the style.
+            view: side / low top-down / high top-down / none
+            direction: north / east / south / west / none
+            outline: e.g. "single color black outline" / "selective outline" / ""
+            shading: e.g. "basic shading" / ""
+            detail: e.g. "medium detail" / "low detail" / ""
+        """
+        payload = {
+            "description": description,
+            "image_size": {"width": width, "height": height},
+            "text_guidance_scale": text_guidance_scale,
+            "style_image": {"base64": image_utils.path_to_png_b64(style_image_path)},
+            "style_strength": style_strength,
+            "view": view,
+            "direction": direction,
+            "outline": outline,
+            "shading": shading,
+            "detail": detail,
+            "no_background": no_background,
+            "init_image_strength": init_image_strength,
+            "seed": seed,
+        }
+        if color_image_path:
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
+        if init_image_path:
+            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
+
+        result = await http_client.call("create-image-bitforge", payload)
+        images = image_utils.extract_images(result)
+        paths = image_utils.save_response_images(images, width, height, "flux_same_style", output_dir)
+        return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
+
+    # ── 4. Style-controlled generation (Bitforge) ────────────────────────────
 
     @mcp.tool()
     async def style_generate(
@@ -201,24 +180,21 @@ def register(mcp) -> None:
         direction: str = "south",
         no_background: bool = True,
         text_guidance_scale: float = 8.0,
-        negative_description: str = "",
         outline: str = "selective outline",
         shading: str = "basic shading",
         detail: str = "medium detail",
         coverage_percentage: float = 0.9,
         seed: int = 0,
-        reference_image_path: Optional[str] = None,
         style_image_path: Optional[str] = None,
-        style_strength: float = 0.0,
+        style_strength: float = 50.0,
         color_image_path: Optional[str] = None,
         init_image_path: Optional[str] = None,
         init_image_strength: int = 300,
     ) -> str:
-        """Generate pixel art with full style control: reference poses, style images, palettes.
+        """Generate pixel art with full style control using the Bitforge model.
 
-        The most flexible single-image generation tool.  Use reference_image_path
-        to provide a pose/composition reference.  style_image_path + style_strength
-        applies a visual style transfer on top.
+        The most flexible single-image generation tool. Use style_image_path
+        to apply a visual style transfer.
 
         Args:
             view: side / low top-down / high top-down
@@ -226,14 +202,13 @@ def register(mcp) -> None:
             outline: selective outline / single color black outline / lineless / none
             shading: none / basic shading / medium shading
             detail: low detail / medium detail / high detail
-            coverage_percentage: how much of the canvas the subject fills (0–1)
-            style_strength: 0 = ignore style image; higher = more influence
+            coverage_percentage: how much of the canvas the subject fills (0-1)
+            style_strength: 0-100, higher = more style influence
         """
         payload = {
             "description": description,
-            "negative_description": negative_description,
-            "text_guidance_scale": text_guidance_scale,
             "image_size": {"width": width, "height": height},
+            "text_guidance_scale": text_guidance_scale,
             "view": view,
             "direction": direction,
             "no_background": no_background,
@@ -241,91 +216,23 @@ def register(mcp) -> None:
             "shading": shading,
             "detail": detail,
             "coverage_percentage": coverage_percentage,
-            "seed": str(seed),
-            "map_tile": False,
-            "force_colors": False,
-            "isometric": False,
-            "oblique_projection": False,
+            "init_image_strength": init_image_strength,
+            "seed": seed,
         }
-        blank = {"base64": ""}
-        payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)} if init_image_path else blank
-        payload["init_image_strength"] = init_image_strength
-        payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)} if color_image_path else blank
-        payload["reference_image"] = {"base64": image_utils.path_to_png_b64(reference_image_path)} if reference_image_path else blank
-        payload["style_image"] = blank
-        payload["style_strength"] = style_strength
         if style_image_path:
             payload["style_image"] = {"base64": image_utils.path_to_png_b64(style_image_path)}
-        payload["style_guidance_scale"] = 3
-        payload["style_image_size"] = {"width": width, "height": height}
-        payload["use_inpainting"] = False
-        payload["inpainting_image"] = blank
-        payload["output_method"] = "New frame"
-        payload["model_name"] = "generate_style"
+            payload["style_strength"] = style_strength
+        if color_image_path:
+            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
+        if init_image_path:
+            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
 
-        result = await ws_client.call("generate-style", payload)
+        result = await http_client.call("create-image-bitforge", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "style", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
-    # ── 5. Spritesheet (instant character) ───────────────────────────────────
-
-    @mcp.tool()
-    async def spritesheet_generate(
-        description: str,
-        output_dir: str,
-        width: int = 32,
-        height: int = 32,
-        view: str = "side",
-        text_guidance_scale: float = 8.0,
-        template_name: str = "female-humanoid",
-        category: str = "realistic",
-        outline: str = "selective outline",
-        shading: str = "basic shading",
-        detail: str = "medium detail",
-        ai_freedom: int = 0,
-        n_rows: int = 4,
-        n_columns: int = 4,
-        seed: int = 0,
-        color_image_path: Optional[str] = None,
-    ) -> str:
-        """Generate a full character spritesheet with multiple animation frames.
-
-        n_rows × n_columns determines the grid layout of the output sheet.
-        ai_freedom=0 strictly follows the template; higher values allow more creative freedom.
-
-        Args:
-            template_name: female-humanoid / male-humanoid / etc.
-            category: realistic / cartoon / etc.
-            ai_freedom: 0 = strict template adherence; 750+ = very free
-        """
-        payload = {
-            "description": description,
-            "image_size": {"width": width, "height": height},
-            "text_guidance_scale": text_guidance_scale,
-            "view": view,
-            "template_name": template_name,
-            "category": category,
-            "outline": outline,
-            "shading": shading,
-            "detail": detail,
-            "ai_freedom": ai_freedom,
-            "n_rows": n_rows,
-            "n_columns": n_columns,
-            "seed": str(seed),
-            "model_name": "generate_spritesheet",
-        }
-        if color_image_path:
-            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
-
-        result = await ws_client.call("generate-spritesheet", payload)
-        images = image_utils.extract_images(result)
-        paths = image_utils.save_response_images(
-            images, width * n_columns, height * n_rows, "spritesheet", output_dir
-        )
-        return f"Saved {len(paths)} spritesheet(s):\n" + "\n".join(paths)
-
-    # ── 6. General images ─────────────────────────────────────────────────────
+    # ── 5. General images ────────────────────────────────────────────────────
 
     @mcp.tool()
     async def general_generate(
@@ -345,10 +252,9 @@ def register(mcp) -> None:
         """Generate general pixel art: scenes, backgrounds, objects (not character-focused).
 
         Args:
-            view: side / low top-down / high top-down
+            view: side / low top-down / high top-down / none
             direction: north / east / south / west / none
         """
-        blank = {"base64": ""}
         payload = {
             "description": description,
             "image_size": {"width": width, "height": height},
@@ -356,29 +262,20 @@ def register(mcp) -> None:
             "view": view,
             "direction": direction,
             "no_background": no_background,
-            "view_direction": False,
-            "view_direction_guidance_scale": 8,
-            "pixelart_style_guidance_scale": 4,
-            "no_background_guidance_scale": 4,
-            "seed": str(seed),
-            "init_image": blank,
             "init_image_strength": init_image_strength,
-            "color_image": blank,
-            "output_method": "New frame",
-            "model_name": "generate_general",
+            "seed": seed,
         }
         if color_image_path:
             payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
         if init_image_path:
             payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
-            payload["init_image_strength"] = init_image_strength
 
-        result = await ws_client.call("generate-general", payload)
+        result = await http_client.call("create-image-pixflux", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "general", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
-    # ── 7. General XL ─────────────────────────────────────────────────────────
+    # ── 6. General XL (Pro generation) ───────────────────────────────────────
 
     @mcp.tool()
     async def general_xl_generate(
@@ -386,46 +283,50 @@ def register(mcp) -> None:
         output_dir: str,
         width: int = 128,
         height: int = 128,
-        view: str = "none",
-        direction: str = "none",
         no_background: bool = False,
-        negative_description: str = "",
-        guidance_scale: float = 8.0,
         seed: int = 0,
-        color_image_path: Optional[str] = None,
-        init_image_path: Optional[str] = None,
-        init_image_strength: int = 300,
+        style_image_path: Optional[str] = None,
+        color_palette: bool = True,
+        outline_style: bool = True,
+        detail: bool = True,
+        shading: bool = True,
     ) -> str:
-        """Generate large-scale pixel art using the XL model. Better for complex scenes."""
-        blank = {"base64": ""}
+        """Generate large-scale pixel art using the V2 Pro model (up to 792x688).
+
+        Better for complex scenes. Supports style references.
+
+        Args:
+            color_palette: Match style color palette.
+            outline_style: Match style outlines.
+            detail: Match style detail level.
+            shading: Match style shading.
+        """
         payload = {
             "description": description,
-            "negative_description": negative_description,
             "image_size": {"width": width, "height": height},
-            "guidance_scale": guidance_scale,
-            "view": view,
-            "direction": direction,
             "no_background": no_background,
-            "view_direction": False,
-            "seed": str(seed),
-            "init_image": blank,
-            "init_image_strength": init_image_strength,
-            "color_image": blank,
-            "output_method": "New frame",
-            "model_name": "generate_general_xl",
+            "seed": seed,
+            "style_options": {
+                "color_palette": color_palette,
+                "outline": outline_style,
+                "detail": detail,
+                "shading": shading,
+            },
         }
-        if color_image_path:
-            payload["color_image"] = {"base64": image_utils.path_to_png_b64(color_image_path)}
-        if init_image_path:
-            payload["init_image"] = {"base64": image_utils.path_to_png_b64(init_image_path)}
-            payload["init_image_strength"] = init_image_strength
+        if style_image_path:
+            style_img = Image.open(style_image_path)
+            sw, sh = style_img.size
+            payload["style_image"] = {
+                "image": {"base64": image_utils.path_to_png_b64(style_image_path)},
+                "size": {"width": sw, "height": sh},
+            }
 
-        result = await ws_client.call("generate-general-xl", payload)
+        result = await http_client.call_async("generate-image-v2", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(images, width, height, "general_xl", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
 
-    # ── 8. Image → pixel art ──────────────────────────────────────────────────
+    # ── 7. Image → pixel art ─────────────────────────────────────────────────
 
     @mcp.tool()
     async def image_to_pixelart(
@@ -434,27 +335,19 @@ def register(mcp) -> None:
         width: int = 64,
         height: int = 64,
         text_guidance_scale: float = 8.0,
-        no_background: bool = False,
         seed: int = 0,
-        max_input_size: int = 1024,
     ) -> str:
         """Convert any photo or artwork to pixel art style.
 
-        The input image is automatically cropped to match the output aspect ratio,
-        rescaled to max_input_size, and sent as raw RGBA bytes (matching the
-        Aseprite plugin protocol for this endpoint).
+        The input image is automatically cropped to match the output aspect ratio.
 
         Args:
-            width/height: Output pixel art dimensions; must be ≤ input area.
-            max_input_size: Max input resolution (tier-1 cap is 1024, tier-2+ is 1280).
+            width/height: Output pixel art dimensions (16-320).
         """
-        import io as _io
-        from PIL import Image as _Image
-
-        img = _Image.open(image_path).convert("RGBA")
+        img = Image.open(image_path).convert("RGBA")
         ow, oh = img.size
 
-        # 1. Crop to output aspect ratio (centred)
+        # Crop to output aspect ratio (centred)
         target_h = int(ow * height / width)
         if target_h > oh:
             target_w = int(oh * width / height)
@@ -464,38 +357,28 @@ def register(mcp) -> None:
             top = (oh - target_h) // 2
             img = img.crop((0, top, ow, top + target_h))
 
-        # 2. Downscale to max_input_size (maintain ratio, divisible by 4)
+        # Downscale if over V2 limit (1280)
         cw, ch = img.size
-        if max(cw, ch) > max_input_size:
-            scale = max_input_size / max(cw, ch)
+        if max(cw, ch) > 1280:
+            scale = 1280 / max(cw, ch)
             cw, ch = int(cw * scale), int(ch * scale)
-        cw = max(4, (cw // 4) * 4)
-        ch = max(4, (ch // 4) * 4)
-        img = img.resize((cw, ch), _Image.LANCZOS)
+        cw = max(16, (cw // 4) * 4)
+        ch = max(16, (ch // 4) * 4)
+        img = img.resize((cw, ch), Image.LANCZOS)
 
-        # 3. Send as raw RGBA bytes; image_size = INPUT dimensions
-        import base64 as _b64
-        rgba_b64 = _b64.b64encode(img.tobytes()).decode()
+        # Encode as PNG base64
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        b64 = base64.b64encode(buf.getvalue()).decode()
+
         payload = {
-            "image": {"base64": rgba_b64},
+            "image": {"base64": b64},
             "image_size": {"width": cw, "height": ch},
-            "width": width,
-            "height": height,
+            "output_size": {"width": width, "height": height},
             "text_guidance_scale": text_guidance_scale,
-            "no_background": no_background,
-            "seed": str(seed),
-            "output_method": "New frame",
-            "model_name": "generate_image_to_pixelart",
+            "seed": seed,
         }
-        result = await ws_client.call("generate-image-to-pixelart", payload)
-
-        # 4. API returns quantized_image (RGBA bytes with explicit width/height)
-        qi = result.get("quantized_image") or result.get("image")
-        if qi is None:
-            return "Saved 0 image(s)"
-        images = [qi]
-        # Resolve actual output dims from response if available
-        out_w = qi.get("width", width) if isinstance(qi, dict) else width
-        out_h = qi.get("height", height) if isinstance(qi, dict) else height
-        paths = image_utils.save_response_images(images, out_w, out_h, "to_pixelart", output_dir)
+        result = await http_client.call("image-to-pixelart", payload)
+        images = image_utils.extract_images(result)
+        paths = image_utils.save_response_images(images, width, height, "to_pixelart", output_dir)
         return f"Saved {len(paths)} image(s):\n" + "\n".join(paths)
