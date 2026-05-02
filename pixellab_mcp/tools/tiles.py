@@ -85,7 +85,7 @@ def register(mcp) -> None:
         result = await http_client.call_async("tilesets", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(
-            images, tile_width * 8, tile_height, "tileset", output_dir
+            images, tile_width * 8, tile_height * 8, "tileset", output_dir
         )
         return f"Saved {len(paths)} tileset(s):\n" + "\n".join(paths)
 
@@ -153,7 +153,7 @@ def register(mcp) -> None:
         result = await http_client.call_async("tilesets-sidescroller", payload)
         images = image_utils.extract_images(result)
         paths = image_utils.save_response_images(
-            images, tile_width * 8, tile_height, "tileset_side", output_dir
+            images, tile_width * 8, tile_height * 8, "tileset_side", output_dir
         )
         return f"Saved {len(paths)} tileset(s):\n" + "\n".join(paths)
 
